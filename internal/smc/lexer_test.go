@@ -18,8 +18,12 @@ func TestLexer(t *testing.T) {
 		assertLexResult(t, ">", "CA:1/1")
 		assertLexResult(t, "-", "D:1/1")
 		assertLexResult(t, "-", "D:1/1")
-		assertLexResult(t, "name", "#name#:1/1")
 		assertLexResult(t, ".", "E:1/1") // Error
+		assertLexResult(t, "&", "E:1/1") // Error
+		assertLexResult(t, "*", "E:1/1") // Error
+		assertLexResult(t, "name", "#name#:1/1")
+		assertLexResult(t, "Name", "#Name#:1/1")
+		assertLexResult(t, "Complex_Name", "#Complex_Name#:1/1")
 	})
 }
 

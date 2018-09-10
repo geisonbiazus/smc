@@ -1,6 +1,8 @@
 package smc
 
-import "regexp"
+import (
+	"regexp"
+)
 
 type TokenCollector interface {
 	OpenBrace(line, pos int)
@@ -42,10 +44,16 @@ func (l *Lexer) Lex(input string) {
 	case "-":
 		l.collector.Dash(1, 1)
 	default:
-		if matched, _ := regexp.MatchString("[a-z]", input); matched {
+		if l.isName(input) {
 			l.collector.Name(input, 1, 1)
 		} else {
 			l.collector.Error(1, 1)
 		}
 	}
+}
+
+var nameRegex = regexp.MustCompile("^\\w*$")
+
+func (l *Lexer) isName(input string) bool {
+	return nameRegex.MatchString(input)
 }
