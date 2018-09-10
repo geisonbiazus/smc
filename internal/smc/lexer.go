@@ -1,14 +1,14 @@
 package smc
 
 type TokenCollector interface {
-	OpenBrace()
-	ClosedBrace()
-	Colon()
-	OpenParen()
-	ClosedParen()
-	OpenAngle()
-	ClosedAngle()
-	Dash()
+	OpenBrace(line, pos int)
+	ClosedBrace(line, pos int)
+	Colon(line, pos int)
+	OpenParen(line, pos int)
+	ClosedParen(line, pos int)
+	OpenAngle(line, pos int)
+	ClosedAngle(line, pos int)
+	Dash(line, pos int)
 }
 
 type Lexer struct {
@@ -22,20 +22,20 @@ func NewLexer(collector TokenCollector) *Lexer {
 func (l *Lexer) Lex(input string) {
 	switch input {
 	case "{":
-		l.collector.OpenBrace()
+		l.collector.OpenBrace(1, 1)
 	case "}":
-		l.collector.ClosedBrace()
+		l.collector.ClosedBrace(1, 1)
 	case ":":
-		l.collector.Colon()
+		l.collector.Colon(1, 1)
 	case "(":
-		l.collector.OpenParen()
+		l.collector.OpenParen(1, 1)
 	case ")":
-		l.collector.ClosedParen()
+		l.collector.ClosedParen(1, 1)
 	case "<":
-		l.collector.OpenAngle()
+		l.collector.OpenAngle(1, 1)
 	case ">":
-		l.collector.ClosedAngle()
+		l.collector.ClosedAngle(1, 1)
 	case "-":
-		l.collector.Dash()
+		l.collector.Dash(1, 1)
 	}
 }

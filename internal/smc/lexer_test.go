@@ -1,6 +1,7 @@
 package smc
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/geisonbiazus/smc/internal/testing/assert"
@@ -8,14 +9,15 @@ import (
 
 func TestLexer(t *testing.T) {
 	t.Run("Single Tokens", func(t *testing.T) {
-		assertLexResult(t, "{", "OB")
-		assertLexResult(t, "}", "CB")
-		assertLexResult(t, ":", "C")
-		assertLexResult(t, "(", "OP")
-		assertLexResult(t, ")", "CP")
-		assertLexResult(t, "<", "OA")
-		assertLexResult(t, ">", "CA")
-		assertLexResult(t, "-", "D")
+		assertLexResult(t, "{", "OB:1/1")
+		assertLexResult(t, "}", "CB:1/1")
+		assertLexResult(t, ":", "C:1/1")
+		assertLexResult(t, "(", "OP:1/1")
+		assertLexResult(t, ")", "CP:1/1")
+		assertLexResult(t, "<", "OA:1/1")
+		assertLexResult(t, ">", "CA:1/1")
+		assertLexResult(t, "-", "D:1/1")
+		assertLexResult(t, "-", "D:1/1")
 	})
 }
 
@@ -35,34 +37,38 @@ func NewTokenCollectorSpy() *TokenCollectorSpy {
 	return &TokenCollectorSpy{}
 }
 
-func (c *TokenCollectorSpy) OpenBrace() {
-	c.Result += "OB"
+func (c *TokenCollectorSpy) addToken(token string, line, pos int) {
+	c.Result += fmt.Sprintf("%s:%d/%d", token, line, pos)
 }
 
-func (c *TokenCollectorSpy) ClosedBrace() {
-	c.Result += "CB"
+func (c *TokenCollectorSpy) OpenBrace(line, pos int) {
+	c.addToken("OB", line, pos)
 }
 
-func (c *TokenCollectorSpy) Colon() {
-	c.Result += "C"
+func (c *TokenCollectorSpy) ClosedBrace(line, pos int) {
+	c.addToken("CB", line, pos)
 }
 
-func (c *TokenCollectorSpy) OpenParen() {
-	c.Result += "OP"
+func (c *TokenCollectorSpy) Colon(line, pos int) {
+	c.addToken("C", line, pos)
 }
 
-func (c *TokenCollectorSpy) ClosedParen() {
-	c.Result += "CP"
+func (c *TokenCollectorSpy) OpenParen(line, pos int) {
+	c.addToken("OP", line, pos)
 }
 
-func (c *TokenCollectorSpy) OpenAngle() {
-	c.Result += "OA"
+func (c *TokenCollectorSpy) ClosedParen(line, pos int) {
+	c.addToken("CP", line, pos)
 }
 
-func (c *TokenCollectorSpy) ClosedAngle() {
-	c.Result += "CA"
+func (c *TokenCollectorSpy) OpenAngle(line, pos int) {
+	c.addToken("OA", line, pos)
 }
 
-func (c *TokenCollectorSpy) Dash() {
-	c.Result += "D"
+func (c *TokenCollectorSpy) ClosedAngle(line, pos int) {
+	c.addToken("CA", line, pos)
+}
+
+func (c *TokenCollectorSpy) Dash(line, pos int) {
+	c.addToken("D", line, pos)
 }
