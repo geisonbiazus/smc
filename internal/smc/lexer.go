@@ -1,5 +1,7 @@
 package smc
 
+import "regexp"
+
 type TokenCollector interface {
 	OpenBrace(line, pos int)
 	ClosedBrace(line, pos int)
@@ -9,6 +11,8 @@ type TokenCollector interface {
 	OpenAngle(line, pos int)
 	ClosedAngle(line, pos int)
 	Dash(line, pos int)
+	Name(name string, line, pos int)
+	Error(line, pos int)
 }
 
 type Lexer struct {
@@ -37,5 +41,11 @@ func (l *Lexer) Lex(input string) {
 		l.collector.ClosedAngle(1, 1)
 	case "-":
 		l.collector.Dash(1, 1)
+	default:
+		if matched, _ := regexp.MatchString("[a-z]", input); matched {
+			l.collector.Name(input, 1, 1)
+		} else {
+			l.collector.Error(1, 1)
+		}
 	}
 }

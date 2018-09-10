@@ -18,6 +18,8 @@ func TestLexer(t *testing.T) {
 		assertLexResult(t, ">", "CA:1/1")
 		assertLexResult(t, "-", "D:1/1")
 		assertLexResult(t, "-", "D:1/1")
+		assertLexResult(t, "name", "#name#:1/1")
+		assertLexResult(t, ".", "E:1/1") // Error
 	})
 }
 
@@ -71,4 +73,12 @@ func (c *TokenCollectorSpy) ClosedAngle(line, pos int) {
 
 func (c *TokenCollectorSpy) Dash(line, pos int) {
 	c.addToken("D", line, pos)
+}
+
+func (c *TokenCollectorSpy) Name(name string, line, pos int) {
+	c.addToken("#"+name+"#", line, pos)
+}
+
+func (c *TokenCollectorSpy) Error(line, pos int) {
+	c.addToken("E", line, pos)
 }
