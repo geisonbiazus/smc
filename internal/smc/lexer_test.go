@@ -1,6 +1,7 @@
 package smc
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -29,6 +30,8 @@ func TestLexer(t *testing.T) {
 		assertLexResult(t, "{name}", "OB:1/1,#name#:1/2,CB:1/6")
 		assertLexResult(t, "{name}asd:fgh>", "OB:1/1,#name#:1/2,CB:1/6,#asd#:1/7,C:1/10,#fgh#:1/11,CA:1/14")
 		assertLexResult(t, "{ name }", "OB:1/1,#name#:1/3,CB:1/8")
+		assertLexResult(t, "{\n  name\n}", "OB:1/1,#name#:2/3,CB:3/1")
+		assertLexResult(t, "FSM: fsm {\n name : >asd &      \n\n  }\n", "#FSM#:1/1,C:1/4,#fsm#:1/6,OB:1/10,#name#:2/2,C:2/7,CA:2/9,#asd#:2/10,E:2/14,CB:4/3")
 	})
 }
 
@@ -36,7 +39,7 @@ func assertLexResult(t *testing.T, input, expected string) {
 	t.Helper()
 	collector := NewTokenCollectorSpy()
 	lexer := NewLexer(collector)
-	lexer.Lex(input)
+	lexer.Lex(bytes.NewBufferString(input))
 	assert.Equal(t, expected, collector.Result)
 }
 

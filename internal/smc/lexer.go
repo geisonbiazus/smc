@@ -1,6 +1,8 @@
 package smc
 
 import (
+	"bufio"
+	"io"
 	"regexp"
 )
 
@@ -20,22 +22,29 @@ type TokenCollector interface {
 type Lexer struct {
 	collector TokenCollector
 	pos       int
+	line      int
 }
 
 func NewLexer(collector TokenCollector) *Lexer {
 	return &Lexer{collector: collector}
 }
 
-func (l *Lexer) Lex(input string) {
-	l.pos = 0
-	for l.pos < len(input) {
-		l.lexLine(input)
+func (l *Lexer) Lex(input io.Reader) {
+	l.line = 0
+	scanner := bufio.NewScanner(input)
+	for scanner.Scan() {
+		l.line++
+		l.lexLine(scanner.Text())
 	}
+
 }
 
 func (l *Lexer) lexLine(input string) {
-	if !l.findToken(input) {
-		l.addError(input)
+	l.pos = 1
+	for l.pos <= len(input) {
+		if !l.findToken(input) {
+			l.addError(input)
+		}
 	}
 }
 
@@ -46,24 +55,24 @@ func (l *Lexer) findToken(input string) bool {
 }
 
 func (l *Lexer) findSingleCharToken(input string) bool {
-	token := input[l.pos : l.pos+1]
+	token := input[l.pos-1 : l.pos]
 	switch token {
 	case "{":
-		l.collector.OpenBrace(1, l.pos+1)
+		l.collector.OpenBrace(l.line, l.pos)
 	case "}":
-		l.collector.ClosedBrace(1, l.pos+1)
+		l.collector.ClosedBrace(l.line, l.pos)
 	case ":":
-		l.collector.Colon(1, l.pos+1)
+		l.collector.Colon(l.line, l.pos)
 	case "(":
-		l.collector.OpenParen(1, l.pos+1)
+		l.collector.OpenParen(l.line, l.pos)
 	case ")":
-		l.collector.ClosedParen(1, l.pos+1)
+		l.collector.ClosedParen(l.line, l.pos)
 	case "<":
-		l.collector.OpenAngle(1, l.pos+1)
+		l.collector.OpenAngle(l.line, l.pos)
 	case ">":
-		l.collector.ClosedAngle(1, l.pos+1)
+		l.collector.ClosedAngle(l.line, l.pos)
 	case "-":
-		l.collector.Dash(1, l.pos+1)
+		l.collector.Dash(l.line, l.pos)
 	default:
 		return false
 	}
@@ -85,7 +94,7 @@ var nameRegex = regexp.MustCompile("^\\w+")
 
 func (l *Lexer) findName(input string) bool {
 	if name, ok := l.matchRegexp(input, nameRegex); ok {
-		l.collector.Name(name, 1, l.pos+1)
+		l.collector.Name(name, l.line, l.pos)
 		l.pos += len(name)
 		return true
 	}
@@ -93,7 +102,7 @@ func (l *Lexer) findName(input string) bool {
 }
 
 func (l *Lexer) matchRegexp(input string, r *regexp.Regexp) (token string, ok bool) {
-	sub := input[l.pos:]
+	sub := input[l.pos-1:]
 	match := r.FindStringSubmatch(sub)
 	if len(match) == 0 {
 		return "", false
@@ -102,6 +111,6 @@ func (l *Lexer) matchRegexp(input string, r *regexp.Regexp) (token string, ok bo
 }
 
 func (l *Lexer) addError(input string) {
-	l.collector.Error(1, l.pos+1)
+	l.collector.Error(l.line, l.pos)
 	l.pos++
 }
