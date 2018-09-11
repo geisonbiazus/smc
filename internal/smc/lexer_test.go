@@ -28,7 +28,7 @@ func TestLexer(t *testing.T) {
 		assertLexResult(t, "{-}<>&:", "OB:1/1,D:1/2,CB:1/3,OA:1/4,CA:1/5,E:1/6,C:1/7")
 		assertLexResult(t, "{name}", "OB:1/1,#name#:1/2,CB:1/6")
 		assertLexResult(t, "{name}asd:fgh>", "OB:1/1,#name#:1/2,CB:1/6,#asd#:1/7,C:1/10,#fgh#:1/11,CA:1/14")
-
+		assertLexResult(t, "{ name }", "OB:1/1,#name#:1/3,CB:1/8")
 	})
 }
 

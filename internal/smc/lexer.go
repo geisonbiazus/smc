@@ -34,12 +34,15 @@ func (l *Lexer) Lex(input string) {
 }
 
 func (l *Lexer) lexLine(input string) {
-	if !l.findSingleCharToken(input) {
-		if !l.findName(input) {
-			l.collector.Error(1, l.pos+1)
-			l.pos++
-		}
+	if !l.findToken(input) {
+		l.addError(input)
 	}
+}
+
+func (l *Lexer) findToken(input string) bool {
+	return l.ignorePossibleWhitespace(input) ||
+		l.findSingleCharToken(input) ||
+		l.findName(input)
 }
 
 func (l *Lexer) findSingleCharToken(input string) bool {
@@ -68,18 +71,37 @@ func (l *Lexer) findSingleCharToken(input string) bool {
 	return true
 }
 
+var whitespaceRegex = regexp.MustCompile("^\\s+")
+
+func (l *Lexer) ignorePossibleWhitespace(input string) bool {
+	if whitespaces, ok := l.matchRegexp(input, whitespaceRegex); ok {
+		l.pos += len(whitespaces)
+		return true
+	}
+	return false
+}
+
 var nameRegex = regexp.MustCompile("^\\w+")
 
 func (l *Lexer) findName(input string) bool {
-	sub := input[l.pos:]
-	match := nameRegex.FindStringSubmatch(sub)
-	if len(match) == 0 {
-		return false
+	if name, ok := l.matchRegexp(input, nameRegex); ok {
+		l.collector.Name(name, 1, l.pos+1)
+		l.pos += len(name)
+		return true
 	}
+	return false
+}
 
-	token := match[0]
+func (l *Lexer) matchRegexp(input string, r *regexp.Regexp) (token string, ok bool) {
+	sub := input[l.pos:]
+	match := r.FindStringSubmatch(sub)
+	if len(match) == 0 {
+		return "", false
+	}
+	return match[0], true
+}
 
-	l.collector.Name(token, 1, l.pos+1)
-	l.pos += len(token)
-	return true
+func (l *Lexer) addError(input string) {
+	l.collector.Error(1, l.pos+1)
+	l.pos++
 }
