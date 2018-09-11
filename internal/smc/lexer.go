@@ -19,6 +19,7 @@ type TokenCollector interface {
 
 type Lexer struct {
 	collector TokenCollector
+	pos       int
 }
 
 func NewLexer(collector TokenCollector) *Lexer {
@@ -26,34 +27,59 @@ func NewLexer(collector TokenCollector) *Lexer {
 }
 
 func (l *Lexer) Lex(input string) {
-	switch input {
-	case "{":
-		l.collector.OpenBrace(1, 1)
-	case "}":
-		l.collector.ClosedBrace(1, 1)
-	case ":":
-		l.collector.Colon(1, 1)
-	case "(":
-		l.collector.OpenParen(1, 1)
-	case ")":
-		l.collector.ClosedParen(1, 1)
-	case "<":
-		l.collector.OpenAngle(1, 1)
-	case ">":
-		l.collector.ClosedAngle(1, 1)
-	case "-":
-		l.collector.Dash(1, 1)
-	default:
-		if l.isName(input) {
-			l.collector.Name(input, 1, 1)
-		} else {
-			l.collector.Error(1, 1)
+	l.pos = 0
+	for l.pos < len(input) {
+		l.lexLine(input)
+	}
+}
+
+func (l *Lexer) lexLine(input string) {
+	if !l.findSingleCharToken(input) {
+		if !l.findName(input) {
+			l.collector.Error(1, l.pos+1)
+			l.pos++
 		}
 	}
 }
 
-var nameRegex = regexp.MustCompile("^\\w*$")
+func (l *Lexer) findSingleCharToken(input string) bool {
+	token := input[l.pos : l.pos+1]
+	switch token {
+	case "{":
+		l.collector.OpenBrace(1, l.pos+1)
+	case "}":
+		l.collector.ClosedBrace(1, l.pos+1)
+	case ":":
+		l.collector.Colon(1, l.pos+1)
+	case "(":
+		l.collector.OpenParen(1, l.pos+1)
+	case ")":
+		l.collector.ClosedParen(1, l.pos+1)
+	case "<":
+		l.collector.OpenAngle(1, l.pos+1)
+	case ">":
+		l.collector.ClosedAngle(1, l.pos+1)
+	case "-":
+		l.collector.Dash(1, l.pos+1)
+	default:
+		return false
+	}
+	l.pos++
+	return true
+}
 
-func (l *Lexer) isName(input string) bool {
-	return nameRegex.MatchString(input)
+var nameRegex = regexp.MustCompile("^\\w+")
+
+func (l *Lexer) findName(input string) bool {
+	sub := input[l.pos:]
+	match := nameRegex.FindStringSubmatch(sub)
+	if len(match) == 0 {
+		return false
+	}
+
+	token := match[0]
+
+	l.collector.Name(token, 1, l.pos+1)
+	l.pos += len(token)
+	return true
 }
