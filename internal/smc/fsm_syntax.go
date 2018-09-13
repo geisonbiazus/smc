@@ -38,13 +38,13 @@ type SyntaxError struct {
 	Position   int
 }
 
-type ErrorType int
+type ErrorType string
 
 const (
-	ErrorHeader          ErrorType = 0
-	ErrorState           ErrorType = 1
-	ErrorTransition      ErrorType = 2
-	ErrorTransitionGroup ErrorType = 3
-	ErrorEnd             ErrorType = 4
-	ErrorSyntax          ErrorType = 5
+	ErrorHeader          ErrorType = "HEADER"
+	ErrorState           ErrorType = "STATE"
+	ErrorTransition      ErrorType = "TRANSITION"
+	ErrorTransitionGroup ErrorType = "TRANSITION_GROUP"
+	ErrorEnd             ErrorType = "END"
+	ErrorSyntax          ErrorType = "SYNTAX"
 )

@@ -4,6 +4,10 @@ type Builder interface {
 	SetName(name string)
 	NewHeader()
 	AddHeaderValue()
+	AddNewTransition()
+	AddEvent()
+	AddNextState()
+	AddAction()
 	HeaderError(s State, e Event, line, pos int)
 }
 
@@ -17,6 +21,7 @@ func NewParser(builder Builder) *Parser {
 }
 
 func (p *Parser) OpenBrace(line, pos int) {
+	p.HandleEvent(EventOpenBrace, line, pos)
 }
 
 func (p *Parser) ClosedBrace(line, pos int) {
@@ -64,6 +69,11 @@ var transitions = []transition{
 	{StateHeader, EventName, StateHeaderColon, func(b Builder) { b.NewHeader() }},
 	{StateHeaderColon, EventColon, StateHeaderValue, NoAction},
 	{StateHeaderValue, EventName, StateHeader, func(b Builder) { b.AddHeaderValue() }},
+	{StateHeader, EventOpenBrace, StateTransitionGroup, NoAction},
+	{StateTransitionGroup, EventName, StateNewTransition, func(b Builder) { b.AddNewTransition() }},
+	{StateNewTransition, EventName, StateSingleEvent, func(b Builder) { b.AddEvent() }},
+	{StateSingleEvent, EventName, StateNextState, func(b Builder) { b.AddNextState() }},
+	{StateNextState, EventName, StateTransitionGroup, func(b Builder) { b.AddAction() }},
 }
 
 func (p *Parser) HandleEvent(event Event, line, pos int) {
@@ -82,12 +92,17 @@ func (p *Parser) HandleEventError(event Event, line, pos int) {
 }
 
 const (
-	StateHeader      State = "HEADER"
-	StateHeaderColon State = "HEADER_COLON"
-	StateHeaderValue State = "HEADER_VALUE"
+	StateHeader          State = "HEADER"
+	StateHeaderColon     State = "HEADER_COLON"
+	StateHeaderValue     State = "HEADER_VALUE"
+	StateTransitionGroup State = "TRANSITION_GROUP"
+	StateNewTransition   State = "NEW_TRANSITION"
+	StateSingleEvent     State = "SINGLE_EVENT"
+	StateNextState       State = "NEXT_STATE"
 
-	EventName  Event = "NAME"
-	EventColon Event = "COLON"
+	EventName      Event = "NAME"
+	EventColon     Event = "COLON"
+	EventOpenBrace Event = "OPEN_BRACE"
 )
 
 var NoAction Action = func(Builder) {}

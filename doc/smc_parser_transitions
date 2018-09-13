@@ -5,7 +5,7 @@ HEADER_COLON                COLON         HEADER_VALUE                -
 HEADER_VALUE                NAME          HEADER                      AddHeaderValue
 HEADER                      OPEN_BRACE    TRANSITION_GROUP            -
 
-TRANSITION_GROUP            NAME          NEW_TRANSITION              NewTransitionWithName
+TRANSITION_GROUP            NAME          NEW_TRANSITION              AddNewTransition
 TRANSITION_GROUP            CLOSED_BRACE  END                         Done
 TRANSITION_GROUP            OPEN_BRACE    GROUP_EVENT                 -
 TRANSITION_GROUP            OPEN_PAREN    SUPER_STATE                 -
