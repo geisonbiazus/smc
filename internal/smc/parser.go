@@ -4,6 +4,7 @@ type Builder interface {
 	SetName(name string)
 	NewHeader()
 	AddHeaderValue()
+	HeaderError(s State, e Event, line, pos int)
 }
 
 type Parser struct {
@@ -60,9 +61,9 @@ type transition struct {
 }
 
 var transitions = []transition{
-	transition{StateHeader, EventName, StateHeaderColon, func(b Builder) { b.NewHeader() }},
-	transition{StateHeaderColon, EventColon, StateHeaderValue, NoAction},
-	transition{StateHeaderValue, EventName, StateHeader, func(b Builder) { b.AddHeaderValue() }},
+	{StateHeader, EventName, StateHeaderColon, func(b Builder) { b.NewHeader() }},
+	{StateHeaderColon, EventColon, StateHeaderValue, NoAction},
+	{StateHeaderValue, EventName, StateHeader, func(b Builder) { b.AddHeaderValue() }},
 }
 
 func (p *Parser) HandleEvent(event Event, line, pos int) {
@@ -70,8 +71,14 @@ func (p *Parser) HandleEvent(event Event, line, pos int) {
 		if t.currentState == p.state && t.event == event {
 			p.state = t.newState
 			t.action(p.Builder)
+			return
 		}
 	}
+	p.HandleEventError(event, line, pos)
+}
+
+func (p *Parser) HandleEventError(event Event, line, pos int) {
+	p.Builder.HeaderError(p.state, event, line, pos)
 }
 
 const (
