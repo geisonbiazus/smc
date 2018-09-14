@@ -3,8 +3,9 @@ package smc
 import "fmt"
 
 type SyntaxBuilder struct {
-	fsm         FSMSyntax
-	currentName string
+	fsm           FSMSyntax
+	currentName   string
+	currentHeader Header
 }
 
 func NewSyntaxBuilder() *SyntaxBuilder {
@@ -24,7 +25,7 @@ func (b *SyntaxBuilder) NewHeader() {
 }
 
 func (b *SyntaxBuilder) AddHeaderValue() {
-	b.fsm.Headers[len(b.fsm.Headers)-1].Value = b.currentName
+	b.lastHeader().Value = b.currentName
 }
 
 func (b *SyntaxBuilder) AddNewTransition() {
@@ -34,25 +35,36 @@ func (b *SyntaxBuilder) AddNewTransition() {
 }
 
 func (b *SyntaxBuilder) AddEvent() {
-	b.fsm.Logic[len(b.fsm.Logic)-1].SubTransitions = append(
-		b.fsm.Logic[len(b.fsm.Logic)-1].SubTransitions,
-		SubTransition{Event: b.currentName},
-	)
-}
-
-func (b *SyntaxBuilder) AddAction() {
-	b.fsm.Logic[len(b.fsm.Logic)-1].SubTransitions[len(b.fsm.Logic[len(b.fsm.Logic)-1].SubTransitions)-1].Actions = append(
-		b.fsm.Logic[len(b.fsm.Logic)-1].SubTransitions[len(b.fsm.Logic[len(b.fsm.Logic)-1].SubTransitions)-1].Actions,
-		b.currentName,
+	b.lastTransition().SubTransitions = append(
+		b.lastTransition().SubTransitions, SubTransition{Event: b.currentName},
 	)
 }
 
 func (b *SyntaxBuilder) AddNextState() {
-	b.fsm.Logic[len(b.fsm.Logic)-1].SubTransitions[len(b.fsm.Logic[len(b.fsm.Logic)-1].SubTransitions)-1].NextState = b.currentName
+	b.lastSubTransition().NextState = b.currentName
+}
+
+func (b *SyntaxBuilder) AddAction() {
+	b.lastSubTransition().Actions = append(
+		b.lastSubTransition().Actions, b.currentName,
+	)
 }
 
 func (b *SyntaxBuilder) HeaderError(s State, e Event, line, pos int) {
 	b.addError(ErrorHeader, s, e, line, pos)
+}
+
+func (b *SyntaxBuilder) lastHeader() *Header {
+	return &b.fsm.Headers[len(b.fsm.Headers)-1]
+}
+
+func (b *SyntaxBuilder) lastTransition() *Transition {
+	return &b.fsm.Logic[len(b.fsm.Logic)-1]
+}
+
+func (b *SyntaxBuilder) lastSubTransition() *SubTransition {
+	return &b.lastTransition().
+		SubTransitions[len(b.lastTransition().SubTransitions)-1]
 }
 
 func (b *SyntaxBuilder) addError(t ErrorType, s State, e Event, line, pos int) {

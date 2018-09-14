@@ -38,7 +38,6 @@ func TestParser(t *testing.T) {
 				{StateSpec{Name: "g"}, []SubTransition{{"h", "i", []string{"j"}}}},
 			},
 		})
-
 }
 
 func assertParserResult(t *testing.T, input string, expected FSMSyntax) {
