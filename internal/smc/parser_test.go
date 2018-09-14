@@ -62,6 +62,26 @@ func TestParser(t *testing.T) {
 			},
 			Done: true,
 		})
+
+	assertParserResult(t,
+		"a:b { c d - e }",
+		FSMSyntax{
+			Headers: []Header{{Name: "a", Value: "b"}},
+			Logic: []Transition{
+				{StateSpec{Name: "c"}, []SubTransition{{"d", "", []string{"e"}}}},
+			},
+			Done: true,
+		})
+
+	assertParserResult(t,
+		"a:b { c - d e }",
+		FSMSyntax{
+			Headers: []Header{{Name: "a", Value: "b"}},
+			Logic: []Transition{
+				{StateSpec{Name: "c"}, []SubTransition{{"", "d", []string{"e"}}}},
+			},
+			Done: true,
+		})
 }
 
 func assertParserResult(t *testing.T, input string, expected FSMSyntax) {

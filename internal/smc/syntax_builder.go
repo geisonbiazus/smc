@@ -34,11 +34,16 @@ func (b *SyntaxBuilder) AddNewTransition() {
 	)
 }
 
-func (b *SyntaxBuilder) AddEvent() {
+func (b *SyntaxBuilder) AddEmptyEvent() {
 	b.lastTransition().SubTransitions = append(
 		b.lastTransition().SubTransitions,
-		SubTransition{Event: b.currentName, Actions: []string{}},
+		SubTransition{Actions: []string{}},
 	)
+}
+
+func (b *SyntaxBuilder) AddEvent() {
+	b.AddEmptyEvent()
+	b.lastSubTransition().Event = b.currentName
 }
 
 func (b *SyntaxBuilder) AddNextState() {

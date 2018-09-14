@@ -5,6 +5,7 @@ type Builder interface {
 	NewHeader()
 	AddHeaderValue()
 	AddNewTransition()
+	AddEmptyEvent()
 	AddEvent()
 	AddNextState()
 	AddAction()
@@ -59,13 +60,12 @@ func (p *Parser) Error(line, pos int) {
 
 type State string
 type Event string
-type Action func(Builder)
 
 type transition struct {
 	currentState State
 	event        Event
 	newState     State
-	action       Action
+	action       func(Builder)
 }
 
 var transitions = []transition{
@@ -77,8 +77,10 @@ var transitions = []transition{
 	{StateTransitionGroup, EventName, StateNewTransition, func(b Builder) { b.AddNewTransition() }},
 	{StateTransitionGroup, EventClosedBrace, StateEnd, func(b Builder) { b.Done() }},
 	{StateNewTransition, EventName, StateSingleEvent, func(b Builder) { b.AddEvent() }},
+	{StateNewTransition, EventDash, StateSingleEvent, func(b Builder) { b.AddEmptyEvent() }},
 
 	{StateSingleEvent, EventName, StateNextState, func(b Builder) { b.AddNextState() }},
+	{StateSingleEvent, EventDash, StateNextState, NoAction},
 	{StateNextState, EventName, StateTransitionGroup, func(b Builder) { b.AddAction() }},
 	{StateNextState, EventOpenBrace, StateActionGroup, NoAction},
 	{StateNextState, EventDash, StateTransitionGroup, NoAction},
@@ -119,4 +121,4 @@ const (
 	EventDash        Event = "DASH"
 )
 
-var NoAction Action = func(Builder) {}
+var NoAction = func(Builder) {}
