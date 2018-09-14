@@ -8,6 +8,7 @@ type Builder interface {
 	AddEvent()
 	AddNextState()
 	AddAction()
+	Done()
 	HeaderError(s State, e Event, line, pos int)
 }
 
@@ -25,6 +26,7 @@ func (p *Parser) OpenBrace(line, pos int) {
 }
 
 func (p *Parser) ClosedBrace(line, pos int) {
+	p.HandleEvent(EventClosedBrace, line, pos)
 }
 
 func (p *Parser) Colon(line, pos int) {
@@ -44,6 +46,7 @@ func (p *Parser) ClosedAngle(line, pos int) {
 }
 
 func (p *Parser) Dash(line, pos int) {
+	p.HandleEvent(EventDash, line, pos)
 }
 
 func (p *Parser) Name(name string, line, pos int) {
@@ -67,13 +70,20 @@ type transition struct {
 
 var transitions = []transition{
 	{StateHeader, EventName, StateHeaderColon, func(b Builder) { b.NewHeader() }},
+	{StateHeader, EventOpenBrace, StateTransitionGroup, NoAction},
 	{StateHeaderColon, EventColon, StateHeaderValue, NoAction},
 	{StateHeaderValue, EventName, StateHeader, func(b Builder) { b.AddHeaderValue() }},
-	{StateHeader, EventOpenBrace, StateTransitionGroup, NoAction},
+
 	{StateTransitionGroup, EventName, StateNewTransition, func(b Builder) { b.AddNewTransition() }},
+	{StateTransitionGroup, EventClosedBrace, StateEnd, func(b Builder) { b.Done() }},
 	{StateNewTransition, EventName, StateSingleEvent, func(b Builder) { b.AddEvent() }},
+
 	{StateSingleEvent, EventName, StateNextState, func(b Builder) { b.AddNextState() }},
 	{StateNextState, EventName, StateTransitionGroup, func(b Builder) { b.AddAction() }},
+	{StateNextState, EventOpenBrace, StateActionGroup, NoAction},
+	{StateNextState, EventDash, StateTransitionGroup, NoAction},
+	{StateActionGroup, EventName, StateActionGroup, func(b Builder) { b.AddAction() }},
+	{StateActionGroup, EventClosedBrace, StateTransitionGroup, NoAction},
 }
 
 func (p *Parser) HandleEvent(event Event, line, pos int) {
@@ -99,10 +109,14 @@ const (
 	StateNewTransition   State = "NEW_TRANSITION"
 	StateSingleEvent     State = "SINGLE_EVENT"
 	StateNextState       State = "NEXT_STATE"
+	StateActionGroup     State = "ACTION_GROUP"
+	StateEnd             State = "END"
 
-	EventName      Event = "NAME"
-	EventColon     Event = "COLON"
-	EventOpenBrace Event = "OPEN_BRACE"
+	EventName        Event = "NAME"
+	EventColon       Event = "COLON"
+	EventOpenBrace   Event = "OPEN_BRACE"
+	EventClosedBrace Event = "CLOSED_BRACE"
+	EventDash        Event = "DASH"
 )
 
 var NoAction Action = func(Builder) {}

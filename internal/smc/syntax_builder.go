@@ -36,7 +36,8 @@ func (b *SyntaxBuilder) AddNewTransition() {
 
 func (b *SyntaxBuilder) AddEvent() {
 	b.lastTransition().SubTransitions = append(
-		b.lastTransition().SubTransitions, SubTransition{Event: b.currentName},
+		b.lastTransition().SubTransitions,
+		SubTransition{Event: b.currentName, Actions: []string{}},
 	)
 }
 
@@ -48,6 +49,10 @@ func (b *SyntaxBuilder) AddAction() {
 	b.lastSubTransition().Actions = append(
 		b.lastSubTransition().Actions, b.currentName,
 	)
+}
+
+func (b *SyntaxBuilder) Done() {
+	b.fsm.Done = true
 }
 
 func (b *SyntaxBuilder) HeaderError(s State, e Event, line, pos int) {

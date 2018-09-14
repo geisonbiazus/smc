@@ -15,6 +15,7 @@ func TestParser(t *testing.T) {
 				{Name: "a", Value: "b"},
 				{Name: "c", Value: "d"},
 			},
+			Done: true,
 		})
 
 	assertParserResult(t,
@@ -27,16 +28,39 @@ func TestParser(t *testing.T) {
 			Errors: []SyntaxError{
 				{Type: ErrorHeader, LineNumber: 1, Position: 4, Msg: "HEADER|COLON"},
 			},
+			Done: true,
 		})
 
 	assertParserResult(t,
-		"a:b{c d e f g h i j}",
+		"a:b{c d e f}",
 		FSMSyntax{
 			Headers: []Header{{Name: "a", Value: "b"}},
 			Logic: []Transition{
 				{StateSpec{Name: "c"}, []SubTransition{{"d", "e", []string{"f"}}}},
-				{StateSpec{Name: "g"}, []SubTransition{{"h", "i", []string{"j"}}}},
 			},
+			Done: true,
+		})
+
+	assertParserResult(t,
+		"a:b{c d e {f g} \n h i j k}",
+		FSMSyntax{
+			Headers: []Header{{Name: "a", Value: "b"}},
+			Logic: []Transition{
+				{StateSpec{Name: "c"}, []SubTransition{{"d", "e", []string{"f", "g"}}}},
+				{StateSpec{Name: "h"}, []SubTransition{{"i", "j", []string{"k"}}}},
+			},
+			Done: true,
+		})
+
+	assertParserResult(t,
+		"a:b { c d e - \n f g h i }",
+		FSMSyntax{
+			Headers: []Header{{Name: "a", Value: "b"}},
+			Logic: []Transition{
+				{StateSpec{Name: "c"}, []SubTransition{{"d", "e", []string{}}}},
+				{StateSpec{Name: "f"}, []SubTransition{{"g", "h", []string{"i"}}}},
+			},
+			Done: true,
 		})
 }
 
