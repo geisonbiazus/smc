@@ -78,6 +78,7 @@ var transitions = []transition{
 	{StateTransitionGroup, EventClosedBrace, StateEnd, func(b Builder) { b.Done() }},
 	{StateNewTransition, EventName, StateSingleEvent, func(b Builder) { b.AddEvent() }},
 	{StateNewTransition, EventDash, StateSingleEvent, func(b Builder) { b.AddEmptyEvent() }},
+	{StateNewTransition, EventOpenBrace, StateSubTransitionGroup, NoAction},
 
 	{StateSingleEvent, EventName, StateNextState, func(b Builder) { b.AddNextState() }},
 	{StateSingleEvent, EventDash, StateNextState, NoAction},
@@ -86,6 +87,17 @@ var transitions = []transition{
 	{StateNextState, EventDash, StateTransitionGroup, NoAction},
 	{StateActionGroup, EventName, StateActionGroup, func(b Builder) { b.AddAction() }},
 	{StateActionGroup, EventClosedBrace, StateTransitionGroup, NoAction},
+
+	{StateSubTransitionGroup, EventClosedBrace, StateTransitionGroup, NoAction},
+	{StateSubTransitionGroup, EventName, StateSubTransitionEvent, func(b Builder) { b.AddEvent() }},
+	{StateSubTransitionGroup, EventDash, StateSubTransitionEvent, func(b Builder) { b.AddEmptyEvent() }},
+	{StateSubTransitionEvent, EventName, StateSubTransitionNextState, func(b Builder) { b.AddNextState() }},
+	{StateSubTransitionEvent, EventDash, StateSubTransitionNextState, NoAction},
+	{StateSubTransitionNextState, EventName, StateSubTransitionGroup, func(b Builder) { b.AddAction() }},
+	{StateSubTransitionNextState, EventDash, StateSubTransitionGroup, NoAction},
+	{StateSubTransitionNextState, EventOpenBrace, StateSubTransitionActionGroup, NoAction},
+	{StateSubTransitionActionGroup, EventClosedBrace, StateSubTransitionGroup, NoAction},
+	{StateSubTransitionActionGroup, EventName, StateSubTransitionActionGroup, func(b Builder) { b.AddAction() }},
 }
 
 func (p *Parser) HandleEvent(event Event, line, pos int) {
@@ -104,15 +116,19 @@ func (p *Parser) HandleEventError(event Event, line, pos int) {
 }
 
 const (
-	StateHeader          State = "HEADER"
-	StateHeaderColon     State = "HEADER_COLON"
-	StateHeaderValue     State = "HEADER_VALUE"
-	StateTransitionGroup State = "TRANSITION_GROUP"
-	StateNewTransition   State = "NEW_TRANSITION"
-	StateSingleEvent     State = "SINGLE_EVENT"
-	StateNextState       State = "NEXT_STATE"
-	StateActionGroup     State = "ACTION_GROUP"
-	StateEnd             State = "END"
+	StateHeader                   State = "HEADER"
+	StateHeaderColon              State = "HEADER_COLON"
+	StateHeaderValue              State = "HEADER_VALUE"
+	StateTransitionGroup          State = "TRANSITION_GROUP"
+	StateNewTransition            State = "NEW_TRANSITION"
+	StateSingleEvent              State = "SINGLE_EVENT"
+	StateNextState                State = "NEXT_STATE"
+	StateActionGroup              State = "ACTION_GROUP"
+	StateSubTransitionGroup       State = "STATE_SUB_TRANSITION_GROUP"
+	StateSubTransitionEvent       State = "STATE_SUB_TRANSITION_EVENT"
+	StateSubTransitionNextState   State = "STATE_SUB_TRANSITION_NEXT_STATE"
+	StateSubTransitionActionGroup State = "STATE_SUB_TRANSITION_ACTION_GROUP"
+	StateEnd                      State = "END"
 
 	EventName        Event = "NAME"
 	EventColon       Event = "COLON"

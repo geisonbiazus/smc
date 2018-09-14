@@ -12,6 +12,7 @@ TRANSITION_GROUP            OPEN_PAREN    SUPER_STATE                 -
 SUPER_STATE                 Name          SUPER_STATE_NAME            AddSuperState
 SUPER_STATE_NAME            CLOSED_PAREN  NEW_TRANSITION              -
 NEW_TRANSITION              NAME          SINGLE_EVENT                AddEvent
+NEW_TRANSITION              NAME          SINGLE_EVENT                AddEmptyEvent
 NEW_TRANSITION              OPEN_BRACE    SUBTRANSITION_GROUP         -
 NEW_TRANSITION              COLON         STATE_BASE                  -
 NEW_TRANSITION              OPEN_ANGLE    ENTRY_ACTION                -
@@ -30,6 +31,7 @@ ACTION_GROUP                NAME          -                           AddAction
 
 SUBTRANSITION_GROUP         CLOSED_BRACE  TRANSITION_GROUP            -
 SUBTRANSITION_GROUP         NAME          SUBTRANSITION_EVENT         AddEvent
+SUBTRANSITION_GROUP         DASH          SUBTRANSITION_EVENT         AddEmptyEvent
 SUBTRANSITION_EVENT         NAME          SUBTRANSITION_NEXT_STATE    AddNextState
 SUBTRANSITION_EVENT         DASH          SUBTRANSITION_NEXT_STATE    -
 SUBTRANSITION_NEXT_STATE    NAME          SUBTRANSITION_GROUP         AddAction
