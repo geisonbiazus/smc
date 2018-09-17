@@ -128,6 +128,34 @@ func TestParser(t *testing.T) {
 			},
 			Done: true,
 		})
+
+	assertParserResult(t,
+		`a:b {
+			(c) d e f
+			(g) h i -
+			j : c : g - - -
+		}`,
+		FSMSyntax{
+			Headers: []Header{{Name: "a", Value: "b"}},
+			Logic: []Transition{
+				{
+					StateSpec{Name: "c", AbstractState: true}, []SubTransition{
+						{"d", "e", []string{"f"}},
+					},
+				},
+				{
+					StateSpec{Name: "g", AbstractState: true}, []SubTransition{
+						{"h", "i", []string{}},
+					},
+				},
+				{
+					StateSpec{Name: "j", SuperStates: []string{"c", "g"}}, []SubTransition{
+						{"", "", []string{}},
+					},
+				},
+			},
+			Done: true,
+		})
 }
 
 func assertParserResult(t *testing.T, input string, expected FSMSyntax) {

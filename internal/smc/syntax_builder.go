@@ -34,6 +34,15 @@ func (b *SyntaxBuilder) AddNewTransition() {
 	)
 }
 
+func (b *SyntaxBuilder) AddNewAbstractTransition() {
+	b.AddNewTransition()
+	b.lastStateSpec().AbstractState = true
+}
+
+func (b *SyntaxBuilder) AddSuperState() {
+	b.lastStateSpec().SuperStates = append(b.lastStateSpec().SuperStates, b.currentName)
+}
+
 func (b *SyntaxBuilder) AddEmptyEvent() {
 	b.lastTransition().SubTransitions = append(
 		b.lastTransition().SubTransitions,
@@ -70,6 +79,10 @@ func (b *SyntaxBuilder) lastHeader() *Header {
 
 func (b *SyntaxBuilder) lastTransition() *Transition {
 	return &b.fsm.Logic[len(b.fsm.Logic)-1]
+}
+
+func (b *SyntaxBuilder) lastStateSpec() *StateSpec {
+	return &b.lastTransition().StateSpec
 }
 
 func (b *SyntaxBuilder) lastSubTransition() *SubTransition {
