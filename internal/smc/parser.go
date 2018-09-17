@@ -14,7 +14,8 @@ type Builder interface {
 	AddNextState()
 	AddAction()
 	Done()
-	HeaderError(s State, e Event, line, pos int)
+	SyntaxError(line, pos int)
+	ParseError(s State, e Event, line, pos int)
 }
 
 type Parser struct {
@@ -64,6 +65,7 @@ func (p *Parser) Name(name string, line, pos int) {
 }
 
 func (p *Parser) Error(line, pos int) {
+	p.Builder.SyntaxError(line, pos)
 }
 
 type State string
@@ -129,7 +131,7 @@ func (p *Parser) HandleEvent(event Event, line, pos int) {
 }
 
 func (p *Parser) HandleEventError(event Event, line, pos int) {
-	p.Builder.HeaderError(p.state, event, line, pos)
+	p.Builder.ParseError(p.state, event, line, pos)
 }
 
 const (

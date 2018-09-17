@@ -77,8 +77,15 @@ func (b *SyntaxBuilder) Done() {
 	b.fsm.Done = true
 }
 
-func (b *SyntaxBuilder) HeaderError(s State, e Event, line, pos int) {
-	b.addError(ErrorHeader, s, e, line, pos)
+func (b *SyntaxBuilder) SyntaxError(line, pos int) {
+	b.fsm.Errors = append(
+		b.fsm.Errors,
+		SyntaxError{Type: ErrorSyntax, LineNumber: line, Position: pos},
+	)
+}
+
+func (b *SyntaxBuilder) ParseError(s State, e Event, line, pos int) {
+	b.addError(ErrorParse, s, e, line, pos)
 }
 
 func (b *SyntaxBuilder) lastHeader() *Header {
@@ -102,6 +109,6 @@ func (b *SyntaxBuilder) addError(t ErrorType, s State, e Event, line, pos int) {
 	msg := fmt.Sprintf("%s|%s", s, e)
 	b.fsm.Errors = append(
 		b.fsm.Errors,
-		SyntaxError{Type: ErrorHeader, Msg: msg, LineNumber: line, Position: pos},
+		SyntaxError{Type: ErrorParse, Msg: msg, LineNumber: line, Position: pos},
 	)
 }

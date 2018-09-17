@@ -41,10 +41,6 @@ type SyntaxError struct {
 type ErrorType string
 
 const (
-	ErrorHeader          ErrorType = "HEADER"
-	ErrorState           ErrorType = "STATE"
-	ErrorTransition      ErrorType = "TRANSITION"
-	ErrorTransitionGroup ErrorType = "TRANSITION_GROUP"
-	ErrorEnd             ErrorType = "END"
-	ErrorSyntax          ErrorType = "SYNTAX"
+	ErrorParse  ErrorType = "PARSE"
+	ErrorSyntax ErrorType = "SYNTAX"
 )
