@@ -15,8 +15,8 @@ NEW_TRANSITION              NAME          SINGLE_EVENT                AddEvent
 NEW_TRANSITION              NAME          SINGLE_EVENT                AddEmptyEvent
 NEW_TRANSITION              OPEN_BRACE    SUBTRANSITION_GROUP         -
 NEW_TRANSITION              COLON         STATE_BASE                  -
-NEW_TRANSITION              OPEN_ANGLE    ENTRY_ACTION                -
-NEW_TRANSITION              CLOSED_ANGLE  EXIT_ACTION                 -
+NEW_TRANSITION              CLOSED_ANGLE  ENTRY_ACTION                -
+NEW_TRANSITION              OPEN_ANGLE    EXIT_ACTION                 -
 STATE_BASE                  NAME          NEW_TRANSITION              AddSuperState
 ENTRY_ACTION                NAME          NEW_TRANSITION              AddEntryAction
 EXIT_ACTION                 NAME          NEW_TRANSITION              AddExitAction
