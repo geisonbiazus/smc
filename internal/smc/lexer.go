@@ -17,6 +17,7 @@ type TokenCollector interface {
 	Dash(line, pos int)
 	Name(name string, line, pos int)
 	Error(line, pos int)
+	End(line, pos int)
 }
 
 type Lexer struct {
@@ -36,7 +37,7 @@ func (l *Lexer) Lex(input io.Reader) {
 		l.line++
 		l.lexLine(scanner.Text())
 	}
-
+	l.collector.End(l.line+1, 1)
 }
 
 func (l *Lexer) lexLine(input string) {

@@ -197,6 +197,18 @@ func TestParser(t *testing.T) {
 				},
 				Done: true,
 			})
+
+		assertParserResult(t,
+			"a:b {",
+			FSMSyntax{
+				Headers: []Header{
+					{Name: "a", Value: "b"},
+				},
+				Errors: []SyntaxError{
+					{Type: ErrorParse, LineNumber: 2, Position: 1, Msg: "TRANSITION_GROUP|END"},
+				},
+				Done: true,
+			})
 	})
 
 }

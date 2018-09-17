@@ -68,6 +68,11 @@ func (p *Parser) Error(line, pos int) {
 	p.Builder.SyntaxError(line, pos)
 }
 
+func (p *Parser) End(line, pos int) {
+	p.Builder.Done()
+	p.HandleEvent(EventEnd, line, pos)
+}
+
 type State string
 type Event string
 
@@ -85,7 +90,7 @@ var transitions = []transition{
 	{StateHeaderValue, EventName, StateHeader, func(b Builder) { b.AddHeaderValue() }},
 
 	{StateTransitionGroup, EventName, StateNewTransition, func(b Builder) { b.AddNewTransition() }},
-	{StateTransitionGroup, EventClosedBrace, StateEnd, func(b Builder) { b.Done() }},
+	{StateTransitionGroup, EventClosedBrace, StateEnd, NoAction},
 	{StateTransitionGroup, EventOpenParen, StateSuperState, NoAction},
 	{StateSuperState, EventName, StateSuperStateName, func(b Builder) { b.AddNewAbstractTransition() }},
 	{StateSuperStateName, EventClosedParen, StateNewTransition, NoAction},
@@ -98,6 +103,7 @@ var transitions = []transition{
 	{StateStateBase, EventName, StateNewTransition, func(b Builder) { b.AddSuperState() }},
 	{StateEntryAction, EventName, StateNewTransition, func(b Builder) { b.AddEntryAction() }},
 	{StateExitAction, EventName, StateNewTransition, func(b Builder) { b.AddExitAction() }},
+	{StateEnd, EventEnd, StateEnd, NoAction},
 
 	{StateSingleEvent, EventName, StateNextState, func(b Builder) { b.AddNextState() }},
 	{StateSingleEvent, EventDash, StateNextState, NoAction},
@@ -163,6 +169,7 @@ const (
 	EventClosedParen Event = "CLOSED_PAREN"
 	EventOpenAngle   Event = "OPEN_ANGLE"
 	EventClosedAngle Event = "CLOSED_ANGLE"
+	EventEnd         Event = "END"
 )
 
 var NoAction = func(Builder) {}
