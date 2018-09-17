@@ -7,6 +7,8 @@ type Builder interface {
 	AddNewTransition()
 	AddNewAbstractTransition()
 	AddSuperState()
+	AddEntryAction()
+	AddExitAction()
 	AddEmptyEvent()
 	AddEvent()
 	AddNextState()
@@ -45,9 +47,11 @@ func (p *Parser) ClosedParen(line, pos int) {
 }
 
 func (p *Parser) OpenAngle(line, pos int) {
+	p.HandleEvent(EventOpenAngle, line, pos)
 }
 
 func (p *Parser) ClosedAngle(line, pos int) {
+	p.HandleEvent(EventClosedAngle, line, pos)
 }
 
 func (p *Parser) Dash(line, pos int) {
@@ -87,7 +91,11 @@ var transitions = []transition{
 	{StateNewTransition, EventDash, StateSingleEvent, func(b Builder) { b.AddEmptyEvent() }},
 	{StateNewTransition, EventOpenBrace, StateSubTransitionGroup, NoAction},
 	{StateNewTransition, EventColon, StateStateBase, NoAction},
+	{StateNewTransition, EventOpenAngle, StateEntryAction, NoAction},
+	{StateNewTransition, EventClosedAngle, StateExitAction, NoAction},
 	{StateStateBase, EventName, StateNewTransition, func(b Builder) { b.AddSuperState() }},
+	{StateEntryAction, EventName, StateNewTransition, func(b Builder) { b.AddEntryAction() }},
+	{StateExitAction, EventName, StateNewTransition, func(b Builder) { b.AddExitAction() }},
 
 	{StateSingleEvent, EventName, StateNextState, func(b Builder) { b.AddNextState() }},
 	{StateSingleEvent, EventDash, StateNextState, NoAction},
@@ -140,6 +148,8 @@ const (
 	StateSuperState               State = "SUPER_STATE"
 	StateSuperStateName           State = "SUPER_STATE_NAME"
 	StateStateBase                State = "STATE_BASE"
+	StateEntryAction              State = "ENTRY_ACTION"
+	StateExitAction               State = "EXIT_ACTION"
 	StateEnd                      State = "END"
 
 	EventName        Event = "NAME"
@@ -149,6 +159,8 @@ const (
 	EventDash        Event = "DASH"
 	EventOpenParen   Event = "OPEN_PAREN"
 	EventClosedParen Event = "CLOSED_PAREN"
+	EventOpenAngle   Event = "OPEN_ANGLE"
+	EventClosedAngle Event = "CLOSED_ANGLE"
 )
 
 var NoAction = func(Builder) {}

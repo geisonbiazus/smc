@@ -156,6 +156,26 @@ func TestParser(t *testing.T) {
 			},
 			Done: true,
 		})
+
+	assertParserResult(t,
+		`a:b {
+			c <d <e >f >g h i j
+		}`,
+		FSMSyntax{
+			Headers: []Header{{Name: "a", Value: "b"}},
+			Logic: []Transition{
+				{
+					StateSpec{
+						Name:         "c",
+						EntryActions: []string{"d", "e"},
+						ExitActions:  []string{"f", "g"},
+					}, []SubTransition{
+						{"h", "i", []string{"j"}},
+					},
+				},
+			},
+			Done: true,
+		})
 }
 
 func assertParserResult(t *testing.T, input string, expected FSMSyntax) {

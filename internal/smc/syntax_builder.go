@@ -43,6 +43,14 @@ func (b *SyntaxBuilder) AddSuperState() {
 	b.lastStateSpec().SuperStates = append(b.lastStateSpec().SuperStates, b.currentName)
 }
 
+func (b *SyntaxBuilder) AddEntryAction() {
+	b.lastStateSpec().EntryActions = append(b.lastStateSpec().EntryActions, b.currentName)
+}
+
+func (b *SyntaxBuilder) AddExitAction() {
+	b.lastStateSpec().ExitActions = append(b.lastStateSpec().ExitActions, b.currentName)
+}
+
 func (b *SyntaxBuilder) AddEmptyEvent() {
 	b.lastTransition().SubTransitions = append(
 		b.lastTransition().SubTransitions,
