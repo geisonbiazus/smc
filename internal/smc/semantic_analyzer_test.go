@@ -8,8 +8,16 @@ import (
 func TestSemanticAnalyzer(t *testing.T) {
 
 	t.Run("Semantic Errors", func(t *testing.T) {
-		assertContainsError(t, analizeSemantically("{}"), ErrorNoFSM)
-		assertNotContainsError(t, analizeSemantically("FSM:a{}"), ErrorNoFSM)
+		t.Run("Header errors", func(t *testing.T) {
+			assertContainsErrors(t, analizeSemantically("{}"), ErrorNoFSM)
+			assertNotContainsErrors(t, analizeSemantically("FSM:a{}"), ErrorNoFSM)
+			assertContainsErrors(t, analizeSemantically("{}"), ErrorNoInitial)
+			assertNotContainsErrors(t, analizeSemantically("Initial:a{}"), ErrorNoInitial)
+			assertContainsErrors(t, analizeSemantically("Actions:a {}"), ErrorNoFSM, ErrorNoInitial)
+			assertContainsErrors(t, analizeSemantically("a:b {}"), ErrorInvalidHeader)
+			assertNotContainsErrors(t, analizeSemantically("Actions:a FSM:b Initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
+			assertNotContainsErrors(t, analizeSemantically("FSM:b Initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
+		})
 	})
 }
 
@@ -24,21 +32,28 @@ func analizeSemantically(input string) *SemanticFSM {
 	return analyzer.Analyze(fsm)
 }
 
-func assertContainsError(t *testing.T, semanticFSM *SemanticFSM, errorType ErrorType) {
+func assertContainsErrors(t *testing.T, semanticFSM *SemanticFSM, errorTypes ...ErrorType) {
 	t.Helper()
-	for _, e := range semanticFSM.Errors {
-		if e.Type == errorType {
-			return
+	for _, errorType := range errorTypes {
+		found := false
+		for _, e := range semanticFSM.Errors {
+			if e.Type == errorType {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("\n Expected: %v \n To contain %v", semanticFSM, errorType)
 		}
 	}
-	t.Errorf("\n Expected: %v \n To contain %v", semanticFSM, errorType)
 }
 
-func assertNotContainsError(t *testing.T, semanticFSM *SemanticFSM, errorType ErrorType) {
+func assertNotContainsErrors(t *testing.T, semanticFSM *SemanticFSM, errorTypes ...ErrorType) {
 	t.Helper()
-	for _, e := range semanticFSM.Errors {
-		if e.Type == errorType {
-			t.Errorf("\n Expected: %v \n To not contain %v", semanticFSM, errorType)
+	for _, errorType := range errorTypes {
+		for _, e := range semanticFSM.Errors {
+			if e.Type == errorType {
+				t.Errorf("\n Expected: %v \n To not contain %v", semanticFSM, errorType)
+			}
 		}
 	}
 }
