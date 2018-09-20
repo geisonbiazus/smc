@@ -43,4 +43,5 @@ type ErrorType string
 const (
 	ErrorParse  ErrorType = "PARSE"
 	ErrorSyntax ErrorType = "SYNTAX"
+	ErrorNoFSM  ErrorType = "NO_FSM"
 )
