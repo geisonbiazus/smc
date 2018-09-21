@@ -3,12 +3,20 @@ package smc
 import (
 	"bytes"
 	"testing"
+
+	"github.com/geisonbiazus/smc/internal/testing/assert"
 )
 
 func TestSemanticAnalyzer(t *testing.T) {
+	t.Run("Header analysis", func(t *testing.T) {
+		t.Run("Values", func(t *testing.T) {
+			semanticFSM := analizeSemantically("Actions:a FSM:b Initial:c {}")
+			assert.Equal(t, "a", semanticFSM.Actions)
+			assert.Equal(t, "b", semanticFSM.Name)
+			assert.Equal(t, "c", semanticFSM.Initial)
+		})
 
-	t.Run("Semantic Errors", func(t *testing.T) {
-		t.Run("Header errors", func(t *testing.T) {
+		t.Run("Errors", func(t *testing.T) {
 			assertContainsErrors(t, analizeSemantically("{}"), ErrorNoFSM)
 			assertNotContainsErrors(t, analizeSemantically("FSM:a{}"), ErrorNoFSM)
 			assertContainsErrors(t, analizeSemantically("{}"), ErrorNoInitial)

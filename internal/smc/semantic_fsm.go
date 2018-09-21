@@ -1,7 +1,10 @@
 package smc
 
 type SemanticFSM struct {
-	Errors []SemanticError
+	Errors  []SemanticError
+	Name    string
+	Actions string
+	Initial string
 }
 
 type SemanticError struct {

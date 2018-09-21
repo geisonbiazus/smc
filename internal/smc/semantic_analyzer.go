@@ -13,32 +13,41 @@ func (a *SemanticAnalyzer) Analyze(fsm FSMSyntax) *SemanticFSM {
 	a.semanticFSM = &SemanticFSM{}
 	a.fsm = fsm
 
-	a.validateRequiredHeader(ErrorNoFSM, "FSM")
-	a.validateRequiredHeader(ErrorNoInitial, "Initial")
-	a.validateAvailableHeaders(ErrorInvalidHeader, "FSM", "Initial", "Actions")
+	a.setAndValidateHeaders()
 
 	return a.semanticFSM
 }
 
-func (a *SemanticAnalyzer) validateRequiredHeader(errorType ErrorType, name string) {
-	for _, header := range a.fsm.Headers {
-		if header.Name == name {
-			return
-		}
-	}
-	a.semanticFSM.Errors = append(a.semanticFSM.Errors, SemanticError{Type: errorType})
+func (a *SemanticAnalyzer) setAndValidateHeaders() {
+	a.setHeaders()
+	a.validateRequiredHeaders()
 }
 
-func (a *SemanticAnalyzer) validateAvailableHeaders(errorType ErrorType, availableHeaders ...string) {
+func (a *SemanticAnalyzer) setHeaders() {
 	for _, header := range a.fsm.Headers {
-		found := false
-		for _, available := range availableHeaders {
-			if header.Name == available {
-				found = true
-			}
-		}
-		if !found {
-			a.semanticFSM.Errors = append(a.semanticFSM.Errors, SemanticError{Type: errorType})
+		switch header.Name {
+		case "FSM":
+			a.semanticFSM.Name = header.Value
+		case "Actions":
+			a.semanticFSM.Actions = header.Value
+		case "Initial":
+			a.semanticFSM.Initial = header.Value
+		default:
+			a.addError(ErrorInvalidHeader)
 		}
 	}
+}
+
+func (a *SemanticAnalyzer) validateRequiredHeaders() {
+	if a.semanticFSM.Name == "" {
+		a.addError(ErrorNoFSM)
+	}
+
+	if a.semanticFSM.Initial == "" {
+		a.addError(ErrorNoInitial)
+	}
+}
+
+func (a *SemanticAnalyzer) addError(errorType ErrorType) {
+	a.semanticFSM.Errors = append(a.semanticFSM.Errors, SemanticError{Type: errorType})
 }
