@@ -27,15 +27,29 @@ func (a *SemanticAnalyzer) setHeaders() {
 	for _, header := range a.fsm.Headers {
 		switch header.Name {
 		case "FSM":
-			a.semanticFSM.Name = header.Value
+			if !a.isDuplicate(a.semanticFSM.Name, ErrorDuplicateHeader) {
+				a.semanticFSM.Name = header.Value
+			}
 		case "Actions":
-			a.semanticFSM.Actions = header.Value
+			if !a.isDuplicate(a.semanticFSM.Actions, ErrorDuplicateHeader) {
+				a.semanticFSM.Actions = header.Value
+			}
 		case "Initial":
-			a.semanticFSM.Initial = header.Value
+			if !a.isDuplicate(a.semanticFSM.Initial, ErrorDuplicateHeader) {
+				a.semanticFSM.Initial = header.Value
+			}
 		default:
 			a.addError(ErrorInvalidHeader)
 		}
 	}
+}
+
+func (a *SemanticAnalyzer) isDuplicate(value string, errorType ErrorType) bool {
+	if value == "" {
+		a.addError(errorType)
+		return false
+	}
+	return true
 }
 
 func (a *SemanticAnalyzer) validateRequiredHeaders() {

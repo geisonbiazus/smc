@@ -12,7 +12,8 @@ type SemanticError struct {
 }
 
 const (
-	ErrorNoFSM         ErrorType = "NO_FSM"
-	ErrorNoInitial     ErrorType = "NO_INITIAL"
-	ErrorInvalidHeader ErrorType = "INVALID_HEADER"
+	ErrorNoFSM           ErrorType = "NO_FSM"
+	ErrorNoInitial       ErrorType = "NO_INITIAL"
+	ErrorInvalidHeader   ErrorType = "INVALID_HEADER"
+	ErrorDuplicateHeader ErrorType = "DUPLICATE_HEADER"
 )
