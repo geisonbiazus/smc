@@ -24,6 +24,7 @@ func TestSemanticAnalyzer(t *testing.T) {
 			assertContainsErrors(t, analizeSemantically("Actions:a {}"), ErrorNoFSM, ErrorNoInitial)
 			assertContainsErrors(t, analizeSemantically("a:b {}"), ErrorInvalidHeader)
 			assertNotContainsErrors(t, analizeSemantically("Actions:a FSM:b Initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
+			assertNotContainsErrors(t, analizeSemantically("actions:a fsm:b initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
 			assertNotContainsErrors(t, analizeSemantically("FSM:b Initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
 			assertContainsErrors(t, analizeSemantically("FSM:a FSM:b {}"), ErrorDuplicateHeader)
 			assertContainsErrors(t, analizeSemantically("Actions:a Actions:b {}"), ErrorDuplicateHeader)

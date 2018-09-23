@@ -1,5 +1,7 @@
 package smc
 
+import "strings"
+
 type SemanticAnalyzer struct {
 	semanticFSM *SemanticFSM
 	fsm         FSMSyntax
@@ -25,16 +27,16 @@ func (a *SemanticAnalyzer) setAndValidateHeaders() {
 
 func (a *SemanticAnalyzer) setHeaders() {
 	for _, header := range a.fsm.Headers {
-		switch header.Name {
-		case "FSM":
+		switch strings.ToLower(header.Name) {
+		case "fsm":
 			if !a.isDuplicate(a.semanticFSM.Name, ErrorDuplicateHeader) {
 				a.semanticFSM.Name = header.Value
 			}
-		case "Actions":
+		case "actions":
 			if !a.isDuplicate(a.semanticFSM.Actions, ErrorDuplicateHeader) {
 				a.semanticFSM.Actions = header.Value
 			}
-		case "Initial":
+		case "initial":
 			if !a.isDuplicate(a.semanticFSM.Initial, ErrorDuplicateHeader) {
 				a.semanticFSM.Initial = header.Value
 			}
