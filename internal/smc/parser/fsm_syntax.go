@@ -1,4 +1,4 @@
-package smc
+package parser
 
 type FSMSyntax struct {
 	Headers []Header

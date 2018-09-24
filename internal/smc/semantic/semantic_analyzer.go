@@ -1,17 +1,21 @@
-package smc
+package semantic
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/geisonbiazus/smc/internal/smc/parser"
+)
 
 type SemanticAnalyzer struct {
 	semanticFSM *SemanticFSM
-	fsm         FSMSyntax
+	fsm         parser.FSMSyntax
 }
 
 func NewSemanticAnalyzer() *SemanticAnalyzer {
 	return &SemanticAnalyzer{}
 }
 
-func (a *SemanticAnalyzer) Analyze(fsm FSMSyntax) *SemanticFSM {
+func (a *SemanticAnalyzer) Analyze(fsm parser.FSMSyntax) *SemanticFSM {
 	a.semanticFSM = &SemanticFSM{}
 	a.fsm = fsm
 

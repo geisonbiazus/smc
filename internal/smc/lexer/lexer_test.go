@@ -1,4 +1,4 @@
-package smc
+package lexer
 
 import (
 	"bytes"

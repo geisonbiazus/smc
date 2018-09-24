@@ -1,4 +1,4 @@
-package smc
+package semantic
 
 type SemanticFSM struct {
 	Errors  []SemanticError
@@ -10,6 +10,8 @@ type SemanticFSM struct {
 type SemanticError struct {
 	Type ErrorType
 }
+
+type ErrorType string
 
 const (
 	ErrorNoFSM           ErrorType = "NO_FSM"

@@ -1,9 +1,11 @@
-package smc
+package semantic
 
 import (
 	"bytes"
 	"testing"
 
+	"github.com/geisonbiazus/smc/internal/smc/lexer"
+	"github.com/geisonbiazus/smc/internal/smc/parser"
 	"github.com/geisonbiazus/smc/internal/testing/assert"
 )
 
@@ -38,9 +40,9 @@ func TestSemanticAnalyzer(t *testing.T) {
 }
 
 func analizeSemantically(input string) *SemanticFSM {
-	builder := NewSyntaxBuilder()
-	parser := NewParser(builder)
-	lexer := NewLexer(parser)
+	builder := parser.NewSyntaxBuilder()
+	parser := parser.NewParser(builder)
+	lexer := lexer.NewLexer(parser)
 	lexer.Lex(bytes.NewBufferString(input))
 
 	fsm := builder.FSM()

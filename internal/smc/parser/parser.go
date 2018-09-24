@@ -1,4 +1,4 @@
-package smc
+package parser
 
 type Builder interface {
 	SetName(name string)

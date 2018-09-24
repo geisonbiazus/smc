@@ -1,4 +1,4 @@
-package smc
+package parser
 
 import "fmt"
 

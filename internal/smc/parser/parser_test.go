@@ -1,9 +1,10 @@
-package smc
+package parser
 
 import (
 	"bytes"
 	"testing"
 
+	"github.com/geisonbiazus/smc/internal/smc/lexer"
 	"github.com/geisonbiazus/smc/internal/testing/assert"
 )
 
@@ -410,7 +411,7 @@ func assertParserResult(t *testing.T, input string, expected FSMSyntax) {
 	t.Helper()
 	builder := NewSyntaxBuilder()
 	parser := NewParser(builder)
-	lexer := NewLexer(parser)
+	lexer := lexer.NewLexer(parser)
 
 	lexer.Lex(bytes.NewBufferString(input))
 	assert.DeepEqual(t, expected, builder.FSM())
