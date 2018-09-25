@@ -10,6 +10,12 @@ type FSM struct {
 	Actions      map[string]bool
 }
 
+func NewFSM() *FSM {
+	return &FSM{
+		States: make(map[string]*State),
+	}
+}
+
 type State struct {
 	Name         string
 	SuperStates  []*State

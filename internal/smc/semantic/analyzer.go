@@ -16,10 +16,11 @@ func NewAnalyzer() *Analyzer {
 }
 
 func (a *Analyzer) Analyze(fsm parser.FSMSyntax) *FSM {
-	a.semanticFSM = &FSM{}
+	a.semanticFSM = NewFSM()
 	a.fsm = fsm
 
 	a.setAndValidateHeaders()
+	a.setStates()
 
 	return a.semanticFSM
 }
@@ -58,7 +59,7 @@ func (a *Analyzer) setActionsClass(value string) {
 
 func (a *Analyzer) setInitialState(value string) {
 	if !a.isDuplicateState(a.semanticFSM.InitialState, ErrorDuplicateHeader) {
-		a.semanticFSM.InitialState = &State{Name: value}
+		a.semanticFSM.InitialState = a.findOrCreateState(value)
 	}
 }
 
@@ -86,6 +87,21 @@ func (a *Analyzer) validateRequiredHeaders() {
 	if a.semanticFSM.InitialState == nil {
 		a.addError(ErrorNoInitial)
 	}
+}
+
+func (a *Analyzer) setStates() {
+	for _, state := range a.fsm.Logic {
+		a.findOrCreateState(state.StateSpec.Name)
+	}
+}
+
+func (a *Analyzer) findOrCreateState(name string) *State {
+	state, ok := a.semanticFSM.States[name]
+	if !ok {
+		state = &State{Name: name}
+		a.semanticFSM.States[name] = state
+	}
+	return state
 }
 
 func (a *Analyzer) addError(errorType ErrorType) {

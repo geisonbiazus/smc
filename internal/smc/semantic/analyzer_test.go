@@ -35,8 +35,13 @@ func TestAnalyzer(t *testing.T) {
 		})
 	})
 
-	t.Run("Logic analysis", func(t *testing.T) {
-		// semanticFSM := analizeSemantically("{}")
+	t.Run("States analysis", func(t *testing.T) {
+		semanticFSM := analizeSemantically("Initial:a{a - - -}")
+		assert.DeepEqual(t, &State{Name: "a"}, semanticFSM.States["a"])
+
+		semanticFSM = analizeSemantically("Initial:a{a - - - b - - -}")
+		assert.DeepEqual(t, &State{Name: "a"}, semanticFSM.States["a"])
+		assert.DeepEqual(t, &State{Name: "b"}, semanticFSM.States["b"])
 	})
 }
 
