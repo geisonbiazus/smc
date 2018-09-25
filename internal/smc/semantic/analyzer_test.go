@@ -9,13 +9,13 @@ import (
 	"github.com/geisonbiazus/smc/internal/testing/assert"
 )
 
-func TestSemanticAnalyzer(t *testing.T) {
+func TestAnalyzer(t *testing.T) {
 	t.Run("Header analysis", func(t *testing.T) {
 		t.Run("Values", func(t *testing.T) {
 			semanticFSM := analizeSemantically("Actions:a FSM:b Initial:c {}")
-			assert.Equal(t, "a", semanticFSM.Actions)
+			assert.Equal(t, "a", semanticFSM.ActionsClass)
 			assert.Equal(t, "b", semanticFSM.Name)
-			assert.Equal(t, "c", semanticFSM.Initial)
+			assert.Equal(t, "c", semanticFSM.InitialState.Name)
 		})
 
 		t.Run("Errors", func(t *testing.T) {
@@ -28,9 +28,10 @@ func TestSemanticAnalyzer(t *testing.T) {
 			assertNotContainsErrors(t, analizeSemantically("Actions:a FSM:b Initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
 			assertNotContainsErrors(t, analizeSemantically("actions:a fsm:b initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
 			assertNotContainsErrors(t, analizeSemantically("FSM:b Initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
-			assertContainsErrors(t, analizeSemantically("FSM:a FSM:b {}"), ErrorDuplicateHeader)
 			assertContainsErrors(t, analizeSemantically("Actions:a Actions:b {}"), ErrorDuplicateHeader)
-			assertContainsErrors(t, analizeSemantically("Initial:a Initial:b {}"), ErrorDuplicateHeader)
+			assertContainsErrors(t, analizeSemantically("FSM:a fsm:b {}"), ErrorDuplicateHeader)
+			assertContainsErrors(t, analizeSemantically("Initial:b Initial:c {}"), ErrorDuplicateHeader)
+			assertNotContainsErrors(t, analizeSemantically("Actions:a FSM:b Initial:c {}"), ErrorDuplicateHeader)
 		})
 	})
 
@@ -39,18 +40,18 @@ func TestSemanticAnalyzer(t *testing.T) {
 	})
 }
 
-func analizeSemantically(input string) *SemanticFSM {
+func analizeSemantically(input string) *FSM {
 	builder := parser.NewSyntaxBuilder()
 	parser := parser.NewParser(builder)
 	lexer := lexer.NewLexer(parser)
 	lexer.Lex(bytes.NewBufferString(input))
 
 	fsm := builder.FSM()
-	analyzer := NewSemanticAnalyzer()
+	analyzer := NewAnalyzer()
 	return analyzer.Analyze(fsm)
 }
 
-func assertContainsErrors(t *testing.T, semanticFSM *SemanticFSM, errorTypes ...ErrorType) {
+func assertContainsErrors(t *testing.T, semanticFSM *FSM, errorTypes ...ErrorType) {
 	t.Helper()
 	for _, errorType := range errorTypes {
 		found := false
@@ -65,7 +66,7 @@ func assertContainsErrors(t *testing.T, semanticFSM *SemanticFSM, errorTypes ...
 	}
 }
 
-func assertNotContainsErrors(t *testing.T, semanticFSM *SemanticFSM, errorTypes ...ErrorType) {
+func assertNotContainsErrors(t *testing.T, semanticFSM *FSM, errorTypes ...ErrorType) {
 	t.Helper()
 	for _, errorType := range errorTypes {
 		for _, e := range semanticFSM.Errors {
