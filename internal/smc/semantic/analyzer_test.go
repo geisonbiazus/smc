@@ -6,7 +6,7 @@ import (
 
 	"github.com/geisonbiazus/smc/internal/smc/lexer"
 	"github.com/geisonbiazus/smc/internal/smc/parser"
-	"github.com/geisonbiazus/smc/internal/testing/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAnalyzer(t *testing.T) {
@@ -36,13 +36,30 @@ func TestAnalyzer(t *testing.T) {
 	})
 
 	t.Run("States analysis", func(t *testing.T) {
-		semanticFSM := analizeSemantically("Initial:a{a - - -}")
-		assert.DeepEqual(t, &State{Name: "a"}, semanticFSM.States["a"])
+		t.Run("Values", func(t *testing.T) {
+			semanticFSM := analizeSemantically("Initial:a{a - - -}")
+			assert.Equal(t, createState("a"), semanticFSM.States["a"])
 
-		semanticFSM = analizeSemantically("Initial:a{a - - - b - - -}")
-		assert.DeepEqual(t, &State{Name: "a"}, semanticFSM.States["a"])
-		assert.DeepEqual(t, &State{Name: "b"}, semanticFSM.States["b"])
+			semanticFSM = analizeSemantically("{a - - - b - - -}")
+			assert.Equal(t, createState("a"), semanticFSM.States["a"])
+			assert.Equal(t, createState("b"), semanticFSM.States["b"])
+
+			semanticFSM = analizeSemantically("Initial:a{a b c {d e} c - - -}")
+			stateA := createState("a")
+			stateC := createState("c")
+			stateA.Transitions[0] = Transition{
+				Event: "b", NextState: stateC, Actions: []string{"d", "e"},
+			}
+
+			assert.Equal(t, stateA, semanticFSM.States["a"])
+		})
 	})
+}
+
+func createState(name string) *State {
+	state := &State{Name: name}
+	state.Transitions = append(state.Transitions, Transition{NextState: state, Actions: []string{}})
+	return state
 }
 
 func analizeSemantically(input string) *FSM {

@@ -91,7 +91,20 @@ func (a *Analyzer) validateRequiredHeaders() {
 
 func (a *Analyzer) setStates() {
 	for _, state := range a.fsm.Logic {
-		a.findOrCreateState(state.StateSpec.Name)
+		semantiState := a.findOrCreateState(state.StateSpec.Name)
+		for _, sub := range state.SubTransitions {
+			nextState := semantiState
+			if sub.NextState != "" {
+				nextState = a.findOrCreateState(sub.NextState)
+			}
+
+			transition := Transition{
+				Event:     sub.Event,
+				NextState: nextState,
+				Actions:   sub.Actions,
+			}
+			semantiState.Transitions = append(semantiState.Transitions, transition)
+		}
 	}
 }
 
