@@ -97,6 +97,12 @@ func (a *Analyzer) setStates() {
 
 func (a *Analyzer) setState(t parser.Transition) {
 	state := a.findOrCreateState(t.StateSpec.Name)
+	state.Abstract = t.StateSpec.AbstractState
+
+	for _, name := range t.StateSpec.SuperStates {
+		state.SuperStates = append(state.SuperStates, a.findOrCreateState(name))
+	}
+
 	for _, sub := range t.SubTransitions {
 		a.setTransition(state, sub)
 	}

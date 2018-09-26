@@ -18,6 +18,7 @@ func NewFSM() *FSM {
 
 type State struct {
 	Name         string
+	Abstract     bool
 	SuperStates  []*State
 	EntryActions []string
 	ExitActions  []string

@@ -39,29 +39,41 @@ func TestAnalyzer(t *testing.T) {
 		t.Run("Values", func(t *testing.T) {
 			t.Run("One state", func(t *testing.T) {
 				semanticFSM := analizeSemantically("Initial:a{a - - -}")
-				assert.Equal(t, createState("a"), semanticFSM.States["a"])
+				assert.Equal(t, createSelfReferencedState("a"), semanticFSM.States["a"])
 			})
 
 			t.Run("More than one state", func(t *testing.T) {
 				semanticFSM := analizeSemantically("{a - - - b - - -}")
-				assert.Equal(t, createState("a"), semanticFSM.States["a"])
-				assert.Equal(t, createState("b"), semanticFSM.States["b"])
+				assert.Equal(t, createSelfReferencedState("a"), semanticFSM.States["a"])
+				assert.Equal(t, createSelfReferencedState("b"), semanticFSM.States["b"])
 			})
 
 			t.Run("State with event, next state, and actions", func(t *testing.T) {
-				semanticFSM := analizeSemantically("Initial:a{a b c {d e} c - - -}")
-				stateA := createState("a")
-				stateC := createState("c")
+				semanticFSM := analizeSemantically("{a b c {d e} c - - -}")
+				stateA := createSelfReferencedState("a")
+				stateC := createSelfReferencedState("c")
 				stateA.Transitions[0] = Transition{
 					Event: "b", NextState: stateC, Actions: []string{"d", "e"},
 				}
 				assert.Equal(t, stateA, semanticFSM.States["a"])
 			})
+
+			t.Run("Super state", func(t *testing.T) {
+				semanticFSM := analizeSemantically("{(a) b c d \n c:a - - -}")
+				stateA := createSelfReferencedState("a")
+				stateC := createSelfReferencedState("c")
+				stateA.Abstract = true
+				stateA.Transitions[0] = Transition{
+					Event: "b", NextState: stateC, Actions: []string{"d"},
+				}
+				stateC.SuperStates = append(stateC.SuperStates, stateA)
+				assert.Equal(t, stateC, semanticFSM.States["c"])
+			})
 		})
 	})
 }
 
-func createState(name string) *State {
+func createSelfReferencedState(name string) *State {
 	state := &State{Name: name}
 	state.Transitions = append(state.Transitions, Transition{NextState: state, Actions: []string{}})
 	return state
