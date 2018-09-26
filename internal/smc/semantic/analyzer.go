@@ -90,22 +90,33 @@ func (a *Analyzer) validateRequiredHeaders() {
 }
 
 func (a *Analyzer) setStates() {
-	for _, state := range a.fsm.Logic {
-		semantiState := a.findOrCreateState(state.StateSpec.Name)
-		for _, sub := range state.SubTransitions {
-			nextState := semantiState
-			if sub.NextState != "" {
-				nextState = a.findOrCreateState(sub.NextState)
-			}
-
-			transition := Transition{
-				Event:     sub.Event,
-				NextState: nextState,
-				Actions:   sub.Actions,
-			}
-			semantiState.Transitions = append(semantiState.Transitions, transition)
-		}
+	for _, transition := range a.fsm.Logic {
+		a.setState(transition)
 	}
+}
+
+func (a *Analyzer) setState(t parser.Transition) {
+	state := a.findOrCreateState(t.StateSpec.Name)
+	for _, sub := range t.SubTransitions {
+		a.setTransition(state, sub)
+	}
+}
+
+func (a *Analyzer) setTransition(state *State, sub parser.SubTransition) {
+	transition := Transition{
+		Event:     sub.Event,
+		NextState: a.resolveNextState(state, sub.NextState),
+		Actions:   sub.Actions,
+	}
+	state.Transitions = append(state.Transitions, transition)
+}
+
+func (a *Analyzer) resolveNextState(state *State, nextStateName string) *State {
+	nextState := state
+	if nextStateName != "" {
+		nextState = a.findOrCreateState(nextStateName)
+	}
+	return nextState
 }
 
 func (a *Analyzer) findOrCreateState(name string) *State {
