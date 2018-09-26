@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/geisonbiazus/smc/internal/testing/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLexer(t *testing.T) {

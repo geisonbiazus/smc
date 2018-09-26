@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/geisonbiazus/smc/internal/smc/lexer"
-	"github.com/geisonbiazus/smc/internal/testing/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParser(t *testing.T) {
@@ -414,5 +414,5 @@ func assertParserResult(t *testing.T, input string, expected FSMSyntax) {
 	lexer := lexer.NewLexer(parser)
 
 	lexer.Lex(bytes.NewBufferString(input))
-	assert.DeepEqual(t, expected, builder.FSM())
+	assert.Equal(t, expected, builder.FSM())
 }
