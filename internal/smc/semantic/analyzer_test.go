@@ -69,6 +69,14 @@ func TestAnalyzer(t *testing.T) {
 				stateC.SuperStates = append(stateC.SuperStates, stateA)
 				assert.Equal(t, stateC, semanticFSM.States["c"])
 			})
+
+			t.Run("Entry and exit action", func(t *testing.T) {
+				semanticFSM := analizeSemantically("{a >b <c - - -}")
+				stateA := createSelfReferencedState("a")
+				stateA.EntryActions = []string{"b"}
+				stateA.ExitActions = []string{"c"}
+				assert.Equal(t, stateA, semanticFSM.States["a"])
+			})
 		})
 	})
 }

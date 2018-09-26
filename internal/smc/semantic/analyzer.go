@@ -8,16 +8,16 @@ import (
 
 type Analyzer struct {
 	semanticFSM *FSM
-	fsm         parser.FSMSyntax
+	parsedFSM   parser.FSMSyntax
 }
 
 func NewAnalyzer() *Analyzer {
 	return &Analyzer{}
 }
 
-func (a *Analyzer) Analyze(fsm parser.FSMSyntax) *FSM {
+func (a *Analyzer) Analyze(parsedFSM parser.FSMSyntax) *FSM {
 	a.semanticFSM = NewFSM()
-	a.fsm = fsm
+	a.parsedFSM = parsedFSM
 
 	a.setAndValidateHeaders()
 	a.setStates()
@@ -31,7 +31,7 @@ func (a *Analyzer) setAndValidateHeaders() {
 }
 
 func (a *Analyzer) setHeaders() {
-	for _, header := range a.fsm.Headers {
+	for _, header := range a.parsedFSM.Headers {
 		switch strings.ToLower(header.Name) {
 		case "fsm":
 			a.setName(header.Value)
@@ -90,19 +90,27 @@ func (a *Analyzer) validateRequiredHeaders() {
 }
 
 func (a *Analyzer) setStates() {
-	for _, transition := range a.fsm.Logic {
-		a.setState(transition)
+	for _, parsedTransition := range a.parsedFSM.Logic {
+		a.setState(parsedTransition)
 	}
 }
 
 func (a *Analyzer) setState(t parser.Transition) {
 	state := a.findOrCreateState(t.StateSpec.Name)
 	state.Abstract = t.StateSpec.AbstractState
+	state.EntryActions = t.StateSpec.EntryActions
+	state.ExitActions = t.StateSpec.ExitActions
+	a.setSuperStates(state, t)
+	a.setTransitions(state, t)
+}
 
+func (a *Analyzer) setSuperStates(state *State, t parser.Transition) {
 	for _, name := range t.StateSpec.SuperStates {
 		state.SuperStates = append(state.SuperStates, a.findOrCreateState(name))
 	}
+}
 
+func (a *Analyzer) setTransitions(state *State, t parser.Transition) {
 	for _, sub := range t.SubTransitions {
 		a.setTransition(state, sub)
 	}
