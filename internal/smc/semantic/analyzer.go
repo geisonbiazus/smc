@@ -112,7 +112,9 @@ func (a *Analyzer) setSuperStates(state *State, t parser.Transition) {
 
 func (a *Analyzer) setTransitions(state *State, t parser.Transition) {
 	for _, sub := range t.SubTransitions {
-		a.setTransition(state, sub)
+		if sub.Event != "" {
+			a.setTransition(state, sub)
+		}
 	}
 }
 
