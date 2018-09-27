@@ -107,6 +107,10 @@ func TestAnalyzer(t *testing.T) {
 				assert.Equal(t, stateA, semanticFSM.States["a"])
 			})
 		})
+
+		t.Run("Errors", func(t *testing.T) {
+			assertContainsError(t, analizeSemantically("Initial: a{}"), ErrorUndefinedState, "a")
+		})
 	})
 }
 
@@ -119,6 +123,25 @@ func analizeSemantically(input string) *FSM {
 	fsm := builder.FSM()
 	analyzer := NewAnalyzer()
 	return analyzer.Analyze(fsm)
+}
+
+func assertContainsError(t *testing.T, semanticFSM *FSM, errorType ErrorType, element string) {
+	t.Helper()
+	for _, e := range semanticFSM.Errors {
+		if e.Type == errorType && e.Element == element {
+			return
+		}
+	}
+	t.Errorf("\n Expected: %v \n To contain %v", semanticFSM, errorType)
+}
+
+func assertNotContainsError(t *testing.T, semanticFSM *FSM, errorType ErrorType, element string) {
+	t.Helper()
+	for _, e := range semanticFSM.Errors {
+		if e.Type == errorType && e.Element == element {
+			t.Errorf("\n Expected: %v \n To not contain %v", semanticFSM, errorType)
+		}
+	}
 }
 
 func assertContainsErrors(t *testing.T, semanticFSM *FSM, errorTypes ...ErrorType) {

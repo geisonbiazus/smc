@@ -7,20 +7,21 @@ import (
 )
 
 type Analyzer struct {
-	semanticFSM *FSM
-	parsedFSM   parser.FSMSyntax
+	semanticFSM   *FSM
+	parsedFSM     parser.FSMSyntax
+	definedStates map[string]bool
 }
 
 func NewAnalyzer() *Analyzer {
-	return &Analyzer{}
+	return &Analyzer{definedStates: make(map[string]bool)}
 }
 
 func (a *Analyzer) Analyze(parsedFSM parser.FSMSyntax) *FSM {
 	a.semanticFSM = NewFSM()
 	a.parsedFSM = parsedFSM
 
-	a.setAndValidateHeaders()
 	a.setStates()
+	a.setAndValidateHeaders()
 
 	return a.semanticFSM
 }
@@ -40,7 +41,7 @@ func (a *Analyzer) setHeaders() {
 		case "initial":
 			a.setInitialState(header.Value)
 		default:
-			a.addError(ErrorInvalidHeader)
+			a.addError(ErrorInvalidHeader, header.Name)
 		}
 	}
 }
@@ -59,13 +60,13 @@ func (a *Analyzer) setActionsClass(value string) {
 
 func (a *Analyzer) setInitialState(value string) {
 	if !a.isDuplicateState(a.semanticFSM.InitialState, ErrorDuplicateHeader) {
-		a.semanticFSM.InitialState = a.findOrCreateState(value)
+		a.semanticFSM.InitialState = a.findAndValidateState(value)
 	}
 }
 
 func (a *Analyzer) isDuplicate(value string, errorType ErrorType) bool {
 	if value != "" {
-		a.addError(errorType)
+		a.addError(errorType, value)
 		return true
 	}
 	return false
@@ -73,7 +74,7 @@ func (a *Analyzer) isDuplicate(value string, errorType ErrorType) bool {
 
 func (a *Analyzer) isDuplicateState(value *State, errorType ErrorType) bool {
 	if value != nil {
-		a.addError(errorType)
+		a.addError(errorType, value.Name)
 		return true
 	}
 	return false
@@ -81,11 +82,11 @@ func (a *Analyzer) isDuplicateState(value *State, errorType ErrorType) bool {
 
 func (a *Analyzer) validateRequiredHeaders() {
 	if a.semanticFSM.Name == "" {
-		a.addError(ErrorNoFSM)
+		a.addError(ErrorNoFSM, "FSM")
 	}
 
 	if a.semanticFSM.InitialState == nil {
-		a.addError(ErrorNoInitial)
+		a.addError(ErrorNoInitial, "Initial")
 	}
 }
 
@@ -135,6 +136,13 @@ func (a *Analyzer) resolveNextState(state *State, nextStateName string) *State {
 	return nextState
 }
 
+func (a *Analyzer) findAndValidateState(name string) *State {
+	if _, ok := a.semanticFSM.States[name]; !ok {
+		a.addError(ErrorUndefinedState, name)
+	}
+	return a.findOrCreateState(name)
+}
+
 func (a *Analyzer) findOrCreateState(name string) *State {
 	state, ok := a.semanticFSM.States[name]
 	if !ok {
@@ -144,6 +152,9 @@ func (a *Analyzer) findOrCreateState(name string) *State {
 	return state
 }
 
-func (a *Analyzer) addError(errorType ErrorType) {
-	a.semanticFSM.Errors = append(a.semanticFSM.Errors, Error{Type: errorType})
+func (a *Analyzer) addError(errorType ErrorType, element string) {
+	a.semanticFSM.Errors = append(
+		a.semanticFSM.Errors,
+		Error{Type: errorType, Element: element},
+	)
 }

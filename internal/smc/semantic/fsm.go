@@ -32,7 +32,8 @@ type Transition struct {
 }
 
 type Error struct {
-	Type ErrorType
+	Type    ErrorType
+	Element string
 }
 
 type ErrorType string
@@ -42,4 +43,6 @@ const (
 	ErrorNoInitial       ErrorType = "NO_INITIAL"
 	ErrorInvalidHeader   ErrorType = "INVALID_HEADER"
 	ErrorDuplicateHeader ErrorType = "DUPLICATE_HEADER"
+	ErrorNoTransitions   ErrorType = "NO_TRANSITIONS"
+	ErrorUndefinedState  ErrorType = "UNDEFINED_STATE"
 )
