@@ -19,19 +19,60 @@ func TestAnalyzer(t *testing.T) {
 		})
 
 		t.Run("Errors", func(t *testing.T) {
-			assertContainsErrors(t, analizeSemantically("{}"), ErrorNoFSM)
-			assertNotContainsErrors(t, analizeSemantically("FSM:a{}"), ErrorNoFSM)
-			assertContainsErrors(t, analizeSemantically("{}"), ErrorNoInitial)
-			assertNotContainsErrors(t, analizeSemantically("Initial:a{}"), ErrorNoInitial)
-			assertContainsErrors(t, analizeSemantically("Actions:a {}"), ErrorNoFSM, ErrorNoInitial)
-			assertContainsErrors(t, analizeSemantically("a:b {}"), ErrorInvalidHeader)
-			assertNotContainsErrors(t, analizeSemantically("Actions:a FSM:b Initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
-			assertNotContainsErrors(t, analizeSemantically("actions:a fsm:b initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
-			assertNotContainsErrors(t, analizeSemantically("FSM:b Initial:c {}"), ErrorNoFSM, ErrorNoInitial, ErrorInvalidHeader)
-			assertContainsErrors(t, analizeSemantically("Actions:a Actions:b {}"), ErrorDuplicateHeader)
-			assertContainsErrors(t, analizeSemantically("FSM:a fsm:b {}"), ErrorDuplicateHeader)
-			assertContainsErrors(t, analizeSemantically("Initial:b Initial:c {}"), ErrorDuplicateHeader)
-			assertNotContainsErrors(t, analizeSemantically("Actions:a FSM:b Initial:c {}"), ErrorDuplicateHeader)
+			assertContainsError(t,
+				analizeSemantically("{}"),
+				Error{ErrorNoFSM, "FSM"},
+			)
+			assertNotContainsError(t,
+				analizeSemantically("FSM:a{}"),
+				Error{ErrorNoFSM, "FSM"},
+			)
+			assertContainsError(t,
+				analizeSemantically("{}"),
+				Error{ErrorNoInitial, "Initial"},
+			)
+			assertNotContainsError(t,
+				analizeSemantically("Initial:a{}"),
+				Error{ErrorNoFSM, "Initial"},
+			)
+			assertContainsError(t,
+				analizeSemantically("Actions:a {}"),
+				Error{ErrorNoFSM, "FSM"}, Error{ErrorNoInitial, "Initial"},
+			)
+			assertContainsError(t,
+				analizeSemantically("a:b {}"),
+				Error{ErrorInvalidHeader, "a"},
+			)
+			assertNotContainsError(t,
+				analizeSemantically("Actions:a FSM:b Initial:c {}"),
+				Error{ErrorNoFSM, "FSM"},
+				Error{ErrorNoInitial, "Initial"},
+				Error{ErrorInvalidHeader, "Actions"},
+			)
+			assertNotContainsError(t,
+				analizeSemantically("actions:a fsm:b initial:c {}"),
+				Error{ErrorNoFSM, "FSM"},
+				Error{ErrorNoInitial, "Initial"},
+				Error{ErrorInvalidHeader, "actions"},
+			)
+			assertContainsError(t,
+				analizeSemantically("Actions:a Actions:b {}"),
+				Error{ErrorDuplicateHeader, "Actions"},
+			)
+			assertContainsError(t,
+				analizeSemantically("FSM:a fsm:b {}"),
+				Error{ErrorDuplicateHeader, "FSM"},
+			)
+			assertContainsError(t,
+				analizeSemantically("Initial:b Initial:c {}"),
+				Error{ErrorDuplicateHeader, "Initial"},
+			)
+			assertNotContainsError(t,
+				analizeSemantically("Actions:a FSM:b Initial:c {}"),
+				Error{ErrorDuplicateHeader, "FSM"},
+				Error{ErrorDuplicateHeader, "Initial"},
+				Error{ErrorDuplicateHeader, "Actions"},
+			)
 		})
 	})
 
@@ -109,7 +150,8 @@ func TestAnalyzer(t *testing.T) {
 		})
 
 		t.Run("Errors", func(t *testing.T) {
-			assertContainsError(t, analizeSemantically("Initial: a{}"), ErrorUndefinedState, "a")
+			assertContainsError(t, analizeSemantically("Initial: a{}"), Error{ErrorUndefinedState, "a"})
+			assertNotContainsError(t, analizeSemantically("Initial: a{a - - -}"), Error{ErrorUndefinedState, "a"})
 		})
 	})
 }
@@ -125,47 +167,16 @@ func analizeSemantically(input string) *FSM {
 	return analyzer.Analyze(fsm)
 }
 
-func assertContainsError(t *testing.T, semanticFSM *FSM, errorType ErrorType, element string) {
+func assertContainsError(t *testing.T, semanticFSM *FSM, errors ...Error) {
 	t.Helper()
-	for _, e := range semanticFSM.Errors {
-		if e.Type == errorType && e.Element == element {
-			return
-		}
-	}
-	t.Errorf("\n Expected: %v \n To contain %v", semanticFSM, errorType)
-}
-
-func assertNotContainsError(t *testing.T, semanticFSM *FSM, errorType ErrorType, element string) {
-	t.Helper()
-	for _, e := range semanticFSM.Errors {
-		if e.Type == errorType && e.Element == element {
-			t.Errorf("\n Expected: %v \n To not contain %v", semanticFSM, errorType)
-		}
+	for _, err := range errors {
+		assert.Contains(t, semanticFSM.Errors, err)
 	}
 }
 
-func assertContainsErrors(t *testing.T, semanticFSM *FSM, errorTypes ...ErrorType) {
+func assertNotContainsError(t *testing.T, semanticFSM *FSM, errors ...Error) {
 	t.Helper()
-	for _, errorType := range errorTypes {
-		found := false
-		for _, e := range semanticFSM.Errors {
-			if e.Type == errorType {
-				found = true
-			}
-		}
-		if !found {
-			t.Errorf("\n Expected: %v \n To contain %v", semanticFSM, errorType)
-		}
-	}
-}
-
-func assertNotContainsErrors(t *testing.T, semanticFSM *FSM, errorTypes ...ErrorType) {
-	t.Helper()
-	for _, errorType := range errorTypes {
-		for _, e := range semanticFSM.Errors {
-			if e.Type == errorType {
-				t.Errorf("\n Expected: %v \n To not contain %v", semanticFSM, errorType)
-			}
-		}
+	for _, err := range errors {
+		assert.NotContains(t, semanticFSM.Errors, err)
 	}
 }

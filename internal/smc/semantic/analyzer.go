@@ -47,34 +47,34 @@ func (a *Analyzer) setHeaders() {
 }
 
 func (a *Analyzer) setName(value string) {
-	if !a.isDuplicate(a.semanticFSM.Name, ErrorDuplicateHeader) {
+	if !a.isDuplicate(a.semanticFSM.Name, ErrorDuplicateHeader, "FSM") {
 		a.semanticFSM.Name = value
 	}
 }
 
 func (a *Analyzer) setActionsClass(value string) {
-	if !a.isDuplicate(a.semanticFSM.ActionsClass, ErrorDuplicateHeader) {
+	if !a.isDuplicate(a.semanticFSM.ActionsClass, ErrorDuplicateHeader, "Actions") {
 		a.semanticFSM.ActionsClass = value
 	}
 }
 
 func (a *Analyzer) setInitialState(value string) {
-	if !a.isDuplicateState(a.semanticFSM.InitialState, ErrorDuplicateHeader) {
+	if !a.isDuplicateState(a.semanticFSM.InitialState, ErrorDuplicateHeader, "Initial") {
 		a.semanticFSM.InitialState = a.findAndValidateState(value)
 	}
 }
 
-func (a *Analyzer) isDuplicate(value string, errorType ErrorType) bool {
+func (a *Analyzer) isDuplicate(value string, errorType ErrorType, element string) bool {
 	if value != "" {
-		a.addError(errorType, value)
+		a.addError(errorType, element)
 		return true
 	}
 	return false
 }
 
-func (a *Analyzer) isDuplicateState(value *State, errorType ErrorType) bool {
+func (a *Analyzer) isDuplicateState(value *State, errorType ErrorType, element string) bool {
 	if value != nil {
-		a.addError(errorType, value.Name)
+		a.addError(errorType, element)
 		return true
 	}
 	return false
