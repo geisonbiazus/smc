@@ -29,8 +29,12 @@ func (a *Analyzer) Analyze(parsedFSM parser.FSMSyntax) *FSM {
 
 func (a *Analyzer) addDefinedStates() {
 	for _, t := range a.parsedFSM.Logic {
-		a.findOrCreateState(t.StateSpec.Name)
+		a.addState(t.StateSpec.Name)
 	}
+}
+
+func (a *Analyzer) addState(name string) {
+	a.semanticFSM.States[name] = a.findOrCreateState(name)
 }
 
 func (a *Analyzer) setAndValidateHeaders() {
@@ -104,7 +108,7 @@ func (a *Analyzer) setAndValidateStates() {
 }
 
 func (a *Analyzer) setAndValidateState(t parser.Transition) {
-	state := a.findAndValidateState(t.StateSpec.Name)
+	state := a.semanticFSM.States[t.StateSpec.Name]
 	state.Abstract = t.StateSpec.AbstractState
 	state.EntryActions = t.StateSpec.EntryActions
 	state.ExitActions = t.StateSpec.ExitActions
@@ -154,7 +158,6 @@ func (a *Analyzer) findOrCreateState(name string) *State {
 	state, ok := a.semanticFSM.States[name]
 	if !ok {
 		state = &State{Name: name}
-		a.semanticFSM.States[name] = state
 	}
 	return state
 }

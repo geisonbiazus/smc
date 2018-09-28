@@ -158,6 +158,12 @@ func TestAnalyzer(t *testing.T) {
 				semanticFSM = analizeSemantically("{a { b - c \n d - e}}")
 				assert.Equal(t, stateA, semanticFSM.States["a"])
 			})
+
+			t.Run("Undefined states are not added", func(t *testing.T) {
+				semanticFSM := analizeSemantically("Initial: a{b c d -}")
+				assert.Len(t, semanticFSM.States, 1)
+				assert.Contains(t, semanticFSM.States, "b")
+			})
 		})
 
 		t.Run("Errors", func(t *testing.T) {
