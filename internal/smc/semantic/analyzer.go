@@ -20,10 +20,17 @@ func (a *Analyzer) Analyze(parsedFSM parser.FSMSyntax) *FSM {
 	a.semanticFSM = NewFSM()
 	a.parsedFSM = parsedFSM
 
-	a.setStates()
+	a.addDefinedStates()
 	a.setAndValidateHeaders()
+	a.setAndValidateStates()
 
 	return a.semanticFSM
+}
+
+func (a *Analyzer) addDefinedStates() {
+	for _, t := range a.parsedFSM.Logic {
+		a.findOrCreateState(t.StateSpec.Name)
+	}
 }
 
 func (a *Analyzer) setAndValidateHeaders() {
@@ -90,14 +97,14 @@ func (a *Analyzer) validateRequiredHeaders() {
 	}
 }
 
-func (a *Analyzer) setStates() {
+func (a *Analyzer) setAndValidateStates() {
 	for _, parsedTransition := range a.parsedFSM.Logic {
-		a.setState(parsedTransition)
+		a.setAndValidateState(parsedTransition)
 	}
 }
 
-func (a *Analyzer) setState(t parser.Transition) {
-	state := a.findOrCreateState(t.StateSpec.Name)
+func (a *Analyzer) setAndValidateState(t parser.Transition) {
+	state := a.findAndValidateState(t.StateSpec.Name)
 	state.Abstract = t.StateSpec.AbstractState
 	state.EntryActions = t.StateSpec.EntryActions
 	state.ExitActions = t.StateSpec.ExitActions
@@ -131,7 +138,7 @@ func (a *Analyzer) setTransition(state *State, sub parser.SubTransition) {
 func (a *Analyzer) resolveNextState(state *State, nextStateName string) *State {
 	nextState := state
 	if nextStateName != "" {
-		nextState = a.findOrCreateState(nextStateName)
+		nextState = a.findAndValidateState(nextStateName)
 	}
 	return nextState
 }

@@ -23,50 +23,61 @@ func TestAnalyzer(t *testing.T) {
 				analizeSemantically("{}"),
 				Error{ErrorNoFSM, "FSM"},
 			)
+
 			assertNotContainsError(t,
 				analizeSemantically("FSM:a{}"),
 				Error{ErrorNoFSM, "FSM"},
 			)
+
 			assertContainsError(t,
 				analizeSemantically("{}"),
 				Error{ErrorNoInitial, "Initial"},
 			)
+
 			assertNotContainsError(t,
 				analizeSemantically("Initial:a{}"),
 				Error{ErrorNoFSM, "Initial"},
 			)
+
 			assertContainsError(t,
 				analizeSemantically("Actions:a {}"),
 				Error{ErrorNoFSM, "FSM"}, Error{ErrorNoInitial, "Initial"},
 			)
+
 			assertContainsError(t,
 				analizeSemantically("a:b {}"),
 				Error{ErrorInvalidHeader, "a"},
 			)
+
 			assertNotContainsError(t,
 				analizeSemantically("Actions:a FSM:b Initial:c {}"),
 				Error{ErrorNoFSM, "FSM"},
 				Error{ErrorNoInitial, "Initial"},
 				Error{ErrorInvalidHeader, "Actions"},
 			)
+
 			assertNotContainsError(t,
 				analizeSemantically("actions:a fsm:b initial:c {}"),
 				Error{ErrorNoFSM, "FSM"},
 				Error{ErrorNoInitial, "Initial"},
 				Error{ErrorInvalidHeader, "actions"},
 			)
+
 			assertContainsError(t,
 				analizeSemantically("Actions:a Actions:b {}"),
 				Error{ErrorDuplicateHeader, "Actions"},
 			)
+
 			assertContainsError(t,
 				analizeSemantically("FSM:a fsm:b {}"),
 				Error{ErrorDuplicateHeader, "FSM"},
 			)
+
 			assertContainsError(t,
 				analizeSemantically("Initial:b Initial:c {}"),
 				Error{ErrorDuplicateHeader, "Initial"},
 			)
+
 			assertNotContainsError(t,
 				analizeSemantically("Actions:a FSM:b Initial:c {}"),
 				Error{ErrorDuplicateHeader, "FSM"},
@@ -150,8 +161,25 @@ func TestAnalyzer(t *testing.T) {
 		})
 
 		t.Run("Errors", func(t *testing.T) {
-			assertContainsError(t, analizeSemantically("Initial: a{}"), Error{ErrorUndefinedState, "a"})
-			assertNotContainsError(t, analizeSemantically("Initial: a{a - - -}"), Error{ErrorUndefinedState, "a"})
+			assertContainsError(t,
+				analizeSemantically("Initial: a{}"),
+				Error{ErrorUndefinedState, "a"},
+			)
+
+			assertNotContainsError(t,
+				analizeSemantically("Initial: a{a - - -}"),
+				Error{ErrorUndefinedState, "a"},
+			)
+
+			assertContainsError(t,
+				analizeSemantically("{a b c -}"),
+				Error{ErrorUndefinedState, "c"},
+			)
+
+			assertNotContainsError(t,
+				analizeSemantically("{a b c - c - - -}"),
+				Error{ErrorUndefinedState, "c"},
+			)
 		})
 	})
 }
