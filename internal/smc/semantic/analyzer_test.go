@@ -186,6 +186,41 @@ func TestAnalyzer(t *testing.T) {
 				analizeSemantically("{a b c - c - - -}"),
 				Error{ErrorUndefinedState, "c"},
 			)
+
+			assertContainsError(t,
+				analizeSemantically("{a >b - - - \n a >c - - -}"),
+				Error{ErrorEntryActionsAlreadyDefined, "a"},
+			)
+
+			assertNotContainsError(t,
+				analizeSemantically("{a >b - - - \n b >c - - -}"),
+				Error{ErrorEntryActionsAlreadyDefined, "a"},
+			)
+
+			assertContainsError(t,
+				analizeSemantically("{a <b - - - \n a <c - - -}"),
+				Error{ErrorExitActionsAlreadyDefined, "a"},
+			)
+
+			assertNotContainsError(t,
+				analizeSemantically("{a <b - - - \n b <c - - -}"),
+				Error{ErrorExitActionsAlreadyDefined, "a"},
+			)
+
+			assertContainsError(t,
+				analizeSemantically("{(a) - - - \n a - - -}"),
+				Error{ErrorAbstractStateRedefinedAsNonAbstract, "a"},
+			)
+
+			assertContainsError(t,
+				analizeSemantically("{a - - - \n (a) - - -}"),
+				Error{ErrorAbstractStateRedefinedAsNonAbstract, "a"},
+			)
+
+			assertNotContainsError(t,
+				analizeSemantically("{(a) - - - \n (a) - - -}"),
+				Error{ErrorAbstractStateRedefinedAsNonAbstract, "a"},
+			)
 		})
 	})
 }

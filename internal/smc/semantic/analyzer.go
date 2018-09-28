@@ -29,12 +29,14 @@ func (a *Analyzer) Analyze(parsedFSM parser.FSMSyntax) *FSM {
 
 func (a *Analyzer) addDefinedStates() {
 	for _, t := range a.parsedFSM.Logic {
-		a.addState(t.StateSpec.Name)
+		a.addState(t.StateSpec)
 	}
 }
 
-func (a *Analyzer) addState(name string) {
-	a.semanticFSM.States[name] = a.findOrCreateState(name)
+func (a *Analyzer) addState(spec parser.StateSpec) {
+	state := a.findOrCreateState(spec.Name)
+	state.Abstract = spec.AbstractState
+	a.semanticFSM.States[spec.Name] = state
 }
 
 func (a *Analyzer) setAndValidateHeaders() {
@@ -109,11 +111,33 @@ func (a *Analyzer) setAndValidateStates() {
 
 func (a *Analyzer) setAndValidateState(t parser.Transition) {
 	state := a.semanticFSM.States[t.StateSpec.Name]
-	state.Abstract = t.StateSpec.AbstractState
-	state.EntryActions = t.StateSpec.EntryActions
-	state.ExitActions = t.StateSpec.ExitActions
+	a.validateAbstractState(state, t)
+	a.setEntryActions(state, t)
+	a.setExitActions(state, t)
 	a.setSuperStates(state, t)
 	a.setTransitions(state, t)
+}
+
+func (a *Analyzer) validateAbstractState(state *State, t parser.Transition) {
+	if state.Abstract != t.StateSpec.AbstractState {
+		a.addError(ErrorAbstractStateRedefinedAsNonAbstract, state.Name)
+	}
+}
+
+func (a *Analyzer) setEntryActions(state *State, t parser.Transition) {
+	if len(state.EntryActions) > 0 {
+		a.addError(ErrorEntryActionsAlreadyDefined, state.Name)
+		return
+	}
+	state.EntryActions = t.StateSpec.EntryActions
+}
+
+func (a *Analyzer) setExitActions(state *State, t parser.Transition) {
+	if len(state.ExitActions) > 0 {
+		a.addError(ErrorExitActionsAlreadyDefined, state.Name)
+		return
+	}
+	state.ExitActions = t.StateSpec.ExitActions
 }
 
 func (a *Analyzer) setSuperStates(state *State, t parser.Transition) {
