@@ -53,4 +53,6 @@ const (
 	ErrorAbstractStateRedefinedAsNonAbstract ErrorType = "ABSTRACT_STATE_REDEFINED_AS_NON_ABSTRACT"
 	ErrorAbstractStateUsedAsNextState        ErrorType = "ABSTRACT_STATE_USED_AS_NEXT_STATE"
 	ErrorUnusedState                         ErrorType = "UNUSED_STATE"
+	ErrorDuplicateTransition                 ErrorType = "DUPLICATE_TRANSITION"
+	ErrorConflictingSuperStates              ErrorType = "CONFLICTING_SUPER_STATES"
 )

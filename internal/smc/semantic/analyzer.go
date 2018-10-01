@@ -24,6 +24,7 @@ func (a *Analyzer) Analyze(parsedFSM parser.FSMSyntax) *FSM {
 	a.setAndValidateHeaders()
 	a.setAndValidateStates()
 	a.checkForUnusedStates()
+	a.checkForConflictingTransitions()
 
 	return a.semanticFSM
 }
@@ -211,6 +212,35 @@ func (a *Analyzer) checkForUnusedStates() {
 	for _, state := range a.semanticFSM.States {
 		if !state.Used {
 			a.addWarning(ErrorUnusedState, state.Name)
+		}
+	}
+}
+
+func (a *Analyzer) checkForConflictingTransitions() {
+	for _, state := range a.semanticFSM.States {
+		a.checkForDuplicateTransition(state)
+		a.checkForConflictingTransitionsOnSuperStates(state)
+	}
+}
+
+func (a *Analyzer) checkForDuplicateTransition(state *State) {
+	index := make(map[string]bool)
+	for _, transition := range state.Transitions {
+		if index[transition.Event] {
+			a.addError(ErrorDuplicateTransition, state.Name+":"+transition.Event)
+		}
+		index[transition.Event] = true
+	}
+}
+
+func (a *Analyzer) checkForConflictingTransitionsOnSuperStates(state *State) {
+	index := make(map[string]bool)
+	for _, super := range state.SuperStates {
+		for _, transition := range super.Transitions {
+			if index[transition.Event] {
+				a.addError(ErrorConflictingSuperStates, state.Name+":"+transition.Event)
+			}
+			index[transition.Event] = true
 		}
 	}
 }

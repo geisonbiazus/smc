@@ -242,6 +242,51 @@ func TestAnalyzer(t *testing.T) {
 				analizeSemantically("{a b c - c - - -}"),
 				Error{ErrorAbstractStateUsedAsNextState, "c"},
 			)
+
+			assertContainsError(t,
+				analizeSemantically("{a { b c - \n b d - }"),
+				Error{ErrorDuplicateTransition, "a:b"},
+			)
+
+			assertNotContainsError(t,
+				analizeSemantically("{a { b c - \n e d - }"),
+				Error{ErrorDuplicateTransition, "a:b"},
+			)
+
+			assertContainsError(t,
+				analizeSemantically(`
+					{
+						(a) e1 c -
+						(b) e1 d -
+						c:a:b
+					}
+					`),
+				Error{ErrorConflictingSuperStates, "c:e1"},
+			)
+
+			assertNotContainsError(t,
+				analizeSemantically(`
+					{
+						(a) e1 c -
+						(b) e2 d -
+						c:a:b
+					}
+					`),
+				Error{ErrorConflictingSuperStates, "c:e1"},
+				Error{ErrorConflictingSuperStates, "c:e2"},
+			)
+
+			t.Run("State can be overriden", func(t *testing.T) {
+				assertNotContainsError(t,
+					analizeSemantically(`
+						{
+							(a) e1 c -
+							b:a e1 d -
+						}
+						`),
+					Error{ErrorConflictingSuperStates, "c:e1"},
+				)
+			})
 		})
 
 		t.Run("Warnings", func(t *testing.T) {
