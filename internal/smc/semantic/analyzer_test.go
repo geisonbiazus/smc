@@ -221,6 +221,26 @@ func TestAnalyzer(t *testing.T) {
 				analizeSemantically("{(a) - - - \n (a) - - -}"),
 				Error{ErrorAbstractStateRedefinedAsNonAbstract, "a"},
 			)
+
+			assertContainsError(t,
+				analizeSemantically("{a:b - - -}"),
+				Error{ErrorUndefinedSuperState, "b"},
+			)
+
+			assertNotContainsError(t,
+				analizeSemantically("{a:b - - - b - - - }"),
+				Error{ErrorUndefinedSuperState, "b"},
+			)
+
+			assertContainsError(t,
+				analizeSemantically("{a b c - (c) - - -}"),
+				Error{ErrorAbstractStateUsedAsNextState, "c"},
+			)
+
+			assertNotContainsError(t,
+				analizeSemantically("{a b c - c - - -}"),
+				Error{ErrorAbstractStateUsedAsNextState, "c"},
+			)
 		})
 	})
 }

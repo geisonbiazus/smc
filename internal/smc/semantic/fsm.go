@@ -45,7 +45,9 @@ const (
 	ErrorDuplicateHeader                     ErrorType = "DUPLICATE_HEADER"
 	ErrorNoTransitions                       ErrorType = "NO_TRANSITIONS"
 	ErrorUndefinedState                      ErrorType = "UNDEFINED_STATE"
+	ErrorUndefinedSuperState                 ErrorType = "UNDEFINED_SUPER_STATE"
 	ErrorEntryActionsAlreadyDefined          ErrorType = "ENTRY_ACTIONS_ALREADY_DEFINED"
 	ErrorExitActionsAlreadyDefined           ErrorType = "EXIT_ACTIONS_ALREADY_DEFINED"
 	ErrorAbstractStateRedefinedAsNonAbstract ErrorType = "ABSTRACT_STATE_REDEFINED_AS_NON_ABSTRACT"
+	ErrorAbstractStateUsedAsNextState        ErrorType = "ABSTRACT_STATE_USED_AS_NEXT_STATE"
 )

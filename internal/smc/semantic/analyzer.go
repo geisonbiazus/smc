@@ -142,7 +142,7 @@ func (a *Analyzer) setExitActions(state *State, t parser.Transition) {
 
 func (a *Analyzer) setSuperStates(state *State, t parser.Transition) {
 	for _, name := range t.StateSpec.SuperStates {
-		state.SuperStates = append(state.SuperStates, a.findOrCreateState(name))
+		state.SuperStates = append(state.SuperStates, a.findAndValidateSuperState(name))
 	}
 }
 
@@ -166,9 +166,26 @@ func (a *Analyzer) setTransition(state *State, sub parser.SubTransition) {
 func (a *Analyzer) resolveNextState(state *State, nextStateName string) *State {
 	nextState := state
 	if nextStateName != "" {
-		nextState = a.findAndValidateState(nextStateName)
+		nextState = a.findAndValidateNextState(nextStateName)
 	}
 	return nextState
+}
+
+func (a *Analyzer) findAndValidateSuperState(name string) *State {
+	if _, ok := a.semanticFSM.States[name]; !ok {
+		a.addError(ErrorUndefinedSuperState, name)
+	}
+	return a.findOrCreateState(name)
+}
+
+func (a *Analyzer) findAndValidateNextState(name string) *State {
+	state := a.findAndValidateState(name)
+
+	if state.Abstract {
+		a.addError(ErrorAbstractStateUsedAsNextState, name)
+	}
+
+	return state
 }
 
 func (a *Analyzer) findAndValidateState(name string) *State {
