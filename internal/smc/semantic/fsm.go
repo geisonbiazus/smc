@@ -2,6 +2,7 @@ package semantic
 
 type FSM struct {
 	Errors       []Error
+	Warnings     []Error
 	Name         string
 	ActionsClass string
 	InitialState *State
@@ -19,6 +20,7 @@ func NewFSM() *FSM {
 type State struct {
 	Name         string
 	Abstract     bool
+	Used         bool
 	SuperStates  []*State
 	EntryActions []string
 	ExitActions  []string
@@ -50,4 +52,5 @@ const (
 	ErrorExitActionsAlreadyDefined           ErrorType = "EXIT_ACTIONS_ALREADY_DEFINED"
 	ErrorAbstractStateRedefinedAsNonAbstract ErrorType = "ABSTRACT_STATE_REDEFINED_AS_NON_ABSTRACT"
 	ErrorAbstractStateUsedAsNextState        ErrorType = "ABSTRACT_STATE_USED_AS_NEXT_STATE"
+	ErrorUnusedState                         ErrorType = "UNUSED_STATE"
 )

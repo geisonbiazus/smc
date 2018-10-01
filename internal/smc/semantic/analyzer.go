@@ -23,6 +23,7 @@ func (a *Analyzer) Analyze(parsedFSM parser.FSMSyntax) *FSM {
 	a.addDefinedStates()
 	a.setAndValidateHeaders()
 	a.setAndValidateStates()
+	a.checkForUnusedStates()
 
 	return a.semanticFSM
 }
@@ -73,7 +74,7 @@ func (a *Analyzer) setActionsClass(value string) {
 
 func (a *Analyzer) setInitialState(value string) {
 	if !a.isDuplicateState(a.semanticFSM.InitialState, ErrorDuplicateHeader, "Initial") {
-		a.semanticFSM.InitialState = a.findAndValidateState(value)
+		a.semanticFSM.InitialState = markUsed(a.findAndValidateState(value))
 	}
 }
 
@@ -142,7 +143,10 @@ func (a *Analyzer) setExitActions(state *State, t parser.Transition) {
 
 func (a *Analyzer) setSuperStates(state *State, t parser.Transition) {
 	for _, name := range t.StateSpec.SuperStates {
-		state.SuperStates = append(state.SuperStates, a.findAndValidateSuperState(name))
+		state.SuperStates = append(
+			state.SuperStates,
+			markUsed(a.findAndValidateSuperState(name)),
+		)
 	}
 }
 
@@ -168,7 +172,7 @@ func (a *Analyzer) resolveNextState(state *State, nextStateName string) *State {
 	if nextStateName != "" {
 		nextState = a.findAndValidateNextState(nextStateName)
 	}
-	return nextState
+	return markUsed(nextState)
 }
 
 func (a *Analyzer) findAndValidateSuperState(name string) *State {
@@ -203,9 +207,29 @@ func (a *Analyzer) findOrCreateState(name string) *State {
 	return state
 }
 
+func (a *Analyzer) checkForUnusedStates() {
+	for _, state := range a.semanticFSM.States {
+		if !state.Used {
+			a.addWarning(ErrorUnusedState, state.Name)
+		}
+	}
+}
+
 func (a *Analyzer) addError(errorType ErrorType, element string) {
 	a.semanticFSM.Errors = append(
 		a.semanticFSM.Errors,
 		Error{Type: errorType, Element: element},
 	)
+}
+
+func (a *Analyzer) addWarning(errorType ErrorType, element string) {
+	a.semanticFSM.Warnings = append(
+		a.semanticFSM.Warnings,
+		Error{Type: errorType, Element: element},
+	)
+}
+
+func markUsed(s *State) *State {
+	s.Used = true
+	return s
 }

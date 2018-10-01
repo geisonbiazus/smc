@@ -91,12 +91,12 @@ func TestAnalyzer(t *testing.T) {
 		t.Run("Values", func(t *testing.T) {
 			t.Run("One state without event", func(t *testing.T) {
 				semanticFSM := analizeSemantically("Initial:a{a - - -}")
-				assert.Equal(t, &State{Name: "a"}, semanticFSM.States["a"])
+				assert.Equal(t, &State{Name: "a", Used: true}, semanticFSM.States["a"])
 			})
 
 			t.Run("Self referenced state", func(t *testing.T) {
 				semanticFSM := analizeSemantically("Initial:a{a b - -}")
-				stateA := &State{Name: "a"}
+				stateA := &State{Name: "a", Used: true}
 				stateA.Transitions = []Transition{
 					{Event: "b", NextState: stateA, Actions: []string{}},
 				}
@@ -115,7 +115,7 @@ func TestAnalyzer(t *testing.T) {
 
 			t.Run("State with event, next state, and actions", func(t *testing.T) {
 				semanticFSM := analizeSemantically("{a b c {d e} c - - -}")
-				stateC := &State{Name: "c"}
+				stateC := &State{Name: "c", Used: true}
 				stateA := &State{Name: "a", Transitions: []Transition{
 					{Event: "b", NextState: stateC, Actions: []string{"d", "e"}},
 				}}
@@ -124,10 +124,11 @@ func TestAnalyzer(t *testing.T) {
 
 			t.Run("Super state", func(t *testing.T) {
 				semanticFSM := analizeSemantically("{(a) b c d \n c:a - - -}")
-				stateC := &State{Name: "c"}
+				stateC := &State{Name: "c", Used: true}
 				stateA := &State{
 					Name:     "a",
 					Abstract: true,
+					Used:     true,
 					Transitions: []Transition{
 						{Event: "b", NextState: stateC, Actions: []string{"d"}},
 					},
@@ -148,7 +149,7 @@ func TestAnalyzer(t *testing.T) {
 
 			t.Run("Two transitions for the same state", func(t *testing.T) {
 				semanticFSM := analizeSemantically("{a b - c \n a d - e}")
-				stateA := &State{Name: "a"}
+				stateA := &State{Name: "a", Used: true}
 				stateA.Transitions = []Transition{
 					{Event: "b", NextState: stateA, Actions: []string{"c"}},
 					{Event: "d", NextState: stateA, Actions: []string{"e"}},
@@ -242,6 +243,33 @@ func TestAnalyzer(t *testing.T) {
 				Error{ErrorAbstractStateUsedAsNextState, "c"},
 			)
 		})
+
+		t.Run("Warnings", func(t *testing.T) {
+			assertContainsWarning(t,
+				analizeSemantically("{a b c d}"),
+				Error{ErrorUnusedState, "a"},
+			)
+
+			assertNotContainsWarning(t,
+				analizeSemantically("{a b a d}"),
+				Error{ErrorUnusedState, "a"},
+			)
+
+			assertNotContainsWarning(t,
+				analizeSemantically("{a b - d}"),
+				Error{ErrorUnusedState, "a"},
+			)
+
+			assertNotContainsWarning(t,
+				analizeSemantically("Initial: a{a b c d}"),
+				Error{ErrorUnusedState, "a"},
+			)
+
+			assertNotContainsWarning(t,
+				analizeSemantically("{a b c d c:a - - -}"),
+				Error{ErrorUnusedState, "a"},
+			)
+		})
 	})
 }
 
@@ -267,5 +295,19 @@ func assertNotContainsError(t *testing.T, semanticFSM *FSM, errors ...Error) {
 	t.Helper()
 	for _, err := range errors {
 		assert.NotContains(t, semanticFSM.Errors, err)
+	}
+}
+
+func assertContainsWarning(t *testing.T, semanticFSM *FSM, errors ...Error) {
+	t.Helper()
+	for _, err := range errors {
+		assert.Contains(t, semanticFSM.Warnings, err)
+	}
+}
+
+func assertNotContainsWarning(t *testing.T, semanticFSM *FSM, errors ...Error) {
+	t.Helper()
+	for _, err := range errors {
+		assert.NotContains(t, semanticFSM.Warnings, err)
 	}
 }
