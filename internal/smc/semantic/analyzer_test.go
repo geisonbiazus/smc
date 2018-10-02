@@ -315,6 +315,101 @@ func TestAnalyzer(t *testing.T) {
 				Error{ErrorUnusedState, "a"},
 			)
 		})
+
+		t.Run("Acceptance tests", func(t *testing.T) {
+			assertValid(t, `
+					Actions: Turnstile
+					FSM: OneCoinTurnstile
+					Initial: Locked
+					{
+						Locked	Coin	Unlocked	{alarmOff unlock}
+						Locked 	Pass	Locked		alarmOn
+						Unlocked	Coin	Unlocked	thankyou
+						Unlocked	Pass	Locked		lock
+					}
+				`)
+
+			assertValid(t, `
+					Actions: Turnstile
+					FSM: TwoCoinTurnstile
+					Initial: Locked
+					{
+					  Locked {
+					    Pass  Alarming   alarmOn
+					    Coin  FirstCoin  -
+					    Reset Locked     {lock alarmOff}
+					  }
+
+					  Alarming  Reset  Locked  {lock alarmOff}
+
+					  FirstCoin {
+					    Pass  Alarming  -
+					    Coin  Unlocked  unlock
+					    Reset Locked    {lock alarmOff}
+					  }
+
+					  Unlocked {
+					    Pass  Locked  lock
+					    Coin  -       thankyou
+					    Reset Locked  {lock alarmOff}
+					  }
+					}
+				`)
+
+			assertValid(t, `
+				Actions: Turnstile
+				FSM: TwoCoinTurnstile
+				Initial: Locked
+				{
+				  (Base)  Reset  Locked  {alarmOff lock}
+
+				  Locked : Base {
+				    Pass  Alarming  alarmOn
+				    Coin  FirstCoin -
+				  }
+
+				  Alarming : Base  -  -  -
+
+				  FirstCoin : Base {
+				    Pass  Alarming  -
+				    Coin  Unlocked  unlock
+				  }
+
+				  Unlocked : Base {
+				    Pass  Locked  lock
+				    Coin  -       thankyou
+				  }
+				}
+			`)
+
+			assertValid(t, `
+				Actions: Turnstile
+				FSM: TwoCoinTurnstile
+				Initial: Locked
+				{
+				  (Base)  Reset  Locked  lock
+
+				  Locked : Base {
+				    Pass  Alarming   -
+				    Coin  FirstCoin  -
+				  }
+
+				  Alarming : Base  >alarmOn <alarmOff {
+				    - - -
+				  }
+
+				  FirstCoin : Base {
+				    Pass  Alarming  -
+				    Coin  Unlocked  unlock
+				  }
+
+				  Unlocked : Base {
+				    Pass  Locked  lock
+				    Coin  -       thankyou
+				  }
+				}
+			`)
+		})
 	})
 }
 
@@ -355,4 +450,10 @@ func assertNotContainsWarning(t *testing.T, semanticFSM *FSM, errors ...Error) {
 	for _, err := range errors {
 		assert.NotContains(t, semanticFSM.Warnings, err)
 	}
+}
+
+func assertValid(t *testing.T, input string) {
+	fsm := analizeSemantically(input)
+	assert.Empty(t, fsm.Errors)
+	assert.Empty(t, fsm.Warnings)
 }
