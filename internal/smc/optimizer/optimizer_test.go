@@ -12,17 +12,15 @@ import (
 
 func TestOptimizer(t *testing.T) {
 	t.Run("Simple FSM", func(t *testing.T) {
-		optimizedFSM := optimizeFSM(`
-      FSM: a
-      Actions: b
-      Initial: c
-      {
-        d e f g
-        h i j {k l}
-      }
-    `)
-
-		assert.Equal(t,
+		assertOptimizedFSM(t, `
+			FSM: a
+	    Actions: b
+	    Initial: c
+	    {
+	      d e f g
+	      h i j {k l}
+	    }
+			`,
 			FSM{
 				Name:         "a",
 				ActionsClass: "b",
@@ -35,8 +33,9 @@ func TestOptimizer(t *testing.T) {
 						{Event: "i", NextState: "j", Actions: []string{"k", "l"}},
 					}},
 				},
+				Events:  []string{"e", "i"},
+				Actions: []string{"g", "k", "l"},
 			},
-			optimizedFSM,
 		)
 	})
 }
@@ -52,4 +51,8 @@ func optimizeFSM(input string) FSM {
 	opt := New()
 
 	return opt.Optimize(semanticFSM)
+}
+
+func assertOptimizedFSM(t *testing.T, input string, expected FSM) {
+	assert.Equal(t, expected, optimizeFSM(input))
 }
