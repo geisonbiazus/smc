@@ -7,17 +7,22 @@ import (
 )
 
 type Analyzer struct {
-	semanticFSM   *FSM
-	parsedFSM     parser.FSMSyntax
-	definedStates map[string]bool
+	semanticFSM *FSM
+	parsedFSM   parser.FSMSyntax
+	stateCache  map[string]*State
+	eventCache  map[string]bool
+	actionCache map[string]bool
 }
 
 func NewAnalyzer() *Analyzer {
-	return &Analyzer{definedStates: make(map[string]bool)}
+	return &Analyzer{}
 }
 
 func (a *Analyzer) Analyze(parsedFSM parser.FSMSyntax) *FSM {
-	a.semanticFSM = NewFSM()
+	a.stateCache = map[string]*State{}
+	a.eventCache = map[string]bool{}
+	a.actionCache = map[string]bool{}
+	a.semanticFSM = &FSM{}
 	a.parsedFSM = parsedFSM
 
 	a.addDefinedStates()
@@ -38,7 +43,8 @@ func (a *Analyzer) addDefinedStates() {
 func (a *Analyzer) addState(spec parser.StateSpec) {
 	state := a.findOrCreateState(spec.Name)
 	state.Abstract = spec.AbstractState
-	a.semanticFSM.States[spec.Name] = state
+	a.stateCache[spec.Name] = state
+	a.semanticFSM.States = append(a.semanticFSM.States, state)
 }
 
 func (a *Analyzer) setAndValidateHeaders() {
@@ -112,7 +118,7 @@ func (a *Analyzer) setAndValidateStates() {
 }
 
 func (a *Analyzer) setAndValidateState(t parser.Transition) {
-	state := a.semanticFSM.States[t.StateSpec.Name]
+	state := a.stateCache[t.StateSpec.Name]
 	a.validateAbstractState(state, t)
 	a.setEntryActions(state, t)
 	a.setExitActions(state, t)
@@ -177,7 +183,7 @@ func (a *Analyzer) resolveNextState(state *State, nextStateName string) *State {
 }
 
 func (a *Analyzer) findAndValidateSuperState(name string) *State {
-	if _, ok := a.semanticFSM.States[name]; !ok {
+	if _, ok := a.stateCache[name]; !ok {
 		a.addError(ErrorUndefinedSuperState, name)
 	}
 	return a.findOrCreateState(name)
@@ -194,14 +200,14 @@ func (a *Analyzer) findAndValidateNextState(name string) *State {
 }
 
 func (a *Analyzer) findAndValidateState(name string) *State {
-	if _, ok := a.semanticFSM.States[name]; !ok {
+	if _, ok := a.stateCache[name]; !ok {
 		a.addError(ErrorUndefinedState, name)
 	}
 	return a.findOrCreateState(name)
 }
 
 func (a *Analyzer) findOrCreateState(name string) *State {
-	state, ok := a.semanticFSM.States[name]
+	state, ok := a.stateCache[name]
 	if !ok {
 		state = &State{Name: name}
 	}

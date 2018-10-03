@@ -6,15 +6,9 @@ type FSM struct {
 	Name         string
 	ActionsClass string
 	InitialState *State
-	States       map[string]*State
-	Events       map[string]bool
-	Actions      map[string]bool
-}
-
-func NewFSM() *FSM {
-	return &FSM{
-		States: make(map[string]*State),
-	}
+	States       []*State
+	Events       []string
+	Actions      []string
 }
 
 type State struct {
