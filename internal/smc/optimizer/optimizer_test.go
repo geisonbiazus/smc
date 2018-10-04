@@ -131,6 +131,32 @@ func TestOptimizer(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("With transition override", func(t *testing.T) {
+		assertOptimizedFSM(t, `
+			FSM: fsm
+	    Actions: actions
+	    Initial: initial
+	    {
+				(a) E - Aa
+				(b):a E Nb {Ab1 Ab2}
+				c:b E Nc Ac
+	    }
+			`,
+			FSM{
+				Name:         "fsm",
+				ActionsClass: "actions",
+				InitialState: "initial",
+				States: []State{
+					{Name: "c", Transitions: []Transition{
+						{Event: "E", NextState: "Nc", Actions: []string{"Ac"}},
+					}},
+				},
+				Events:  []string{"E"},
+				Actions: []string{"Aa", "Ab1", "Ab2", "Ac"},
+			},
+		)
+	})
 }
 
 func optimizeFSM(input string) FSM {

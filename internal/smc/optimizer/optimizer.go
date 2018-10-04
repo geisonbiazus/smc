@@ -43,17 +43,24 @@ func (o *Optimizer) optimizeStates() {
 
 func (o *Optimizer) setState(s *semantic.State) {
 	state := State{Name: s.Name}
-	o.setTransitions(&state, s)
+	o.setTransitions(&state, s, make(map[string]bool))
 	o.optimizedFSM.States = append(o.optimizedFSM.States, state)
 }
 
-func (o *Optimizer) setTransitions(state *State, semanticState *semantic.State) {
+func (o *Optimizer) setTransitions(
+	state *State, semanticState *semantic.State, definedEvents map[string]bool,
+) {
+
 	for _, t := range semanticState.Transitions {
-		o.addTransition(state, t)
+		if !definedEvents[t.Event] {
+			o.addTransition(state, t)
+			definedEvents[t.Event] = true
+		}
+
 	}
 
 	for _, superState := range semanticState.SuperStates {
-		o.setTransitions(state, superState)
+		o.setTransitions(state, superState, definedEvents)
 	}
 }
 
