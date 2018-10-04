@@ -17,7 +17,7 @@ func (o *Optimizer) Optimize(fsm *semantic.FSM) FSM {
 
 	o.setEventsAndActions()
 	o.setHeaders()
-	o.setStates()
+	o.optimizeStates()
 
 	return o.optimizedFSM
 }
@@ -33,15 +33,27 @@ func (o *Optimizer) setHeaders() {
 	o.optimizedFSM.InitialState = o.semanticFSM.InitialState.Name
 }
 
-func (o *Optimizer) setStates() {
+func (o *Optimizer) optimizeStates() {
 	for _, s := range o.semanticFSM.States {
-		state := State{Name: s.Name}
-
-		for _, t := range s.Transitions {
-			transition := Transition{Event: t.Event, NextState: t.NextState.Name, Actions: t.Actions}
-			state.Transitions = append(state.Transitions, transition)
+		if !s.Abstract {
+			o.setState(s)
 		}
+	}
+}
 
-		o.optimizedFSM.States = append(o.optimizedFSM.States, state)
+func (o *Optimizer) setState(s *semantic.State) {
+	state := State{Name: s.Name}
+	o.setTransitions(&state, s)
+	o.optimizedFSM.States = append(o.optimizedFSM.States, state)
+}
+
+func (o *Optimizer) setTransitions(state *State, semanticState *semantic.State) {
+	for _, t := range semanticState.Transitions {
+		transition := Transition{Event: t.Event, NextState: t.NextState.Name, Actions: t.Actions}
+		state.Transitions = append(state.Transitions, transition)
+	}
+
+	for _, superState := range semanticState.SuperStates {
+		o.setTransitions(state, superState)
 	}
 }

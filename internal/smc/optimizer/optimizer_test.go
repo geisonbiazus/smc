@@ -38,6 +38,99 @@ func TestOptimizer(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("With abstract superclass", func(t *testing.T) {
+		assertOptimizedFSM(t, `
+			FSM: fsm
+	    Actions: actions
+	    Initial: initial
+	    {
+				(a) b c d
+				e:a - - -
+	    }
+			`,
+			FSM{
+				Name:         "fsm",
+				ActionsClass: "actions",
+				InitialState: "initial",
+				States: []State{
+					{Name: "e", Transitions: []Transition{
+						{Event: "b", NextState: "c", Actions: []string{"d"}},
+					}},
+				},
+				Events:  []string{"b"},
+				Actions: []string{"d"},
+			},
+		)
+	})
+
+	t.Run("With not abstract superclass", func(t *testing.T) {
+		assertOptimizedFSM(t, `
+			FSM: fsm
+	    Actions: actions
+	    Initial: initial
+	    {
+				a b c d
+				e:a - - -
+	    }
+			`,
+			FSM{
+				Name:         "fsm",
+				ActionsClass: "actions",
+				InitialState: "initial",
+				States: []State{
+					{Name: "a", Transitions: []Transition{
+						{Event: "b", NextState: "c", Actions: []string{"d"}},
+					}},
+					{Name: "e", Transitions: []Transition{
+						{Event: "b", NextState: "c", Actions: []string{"d"}},
+					}},
+				},
+				Events:  []string{"b"},
+				Actions: []string{"d"},
+			},
+		)
+	})
+
+	t.Run("With deep inheritance", func(t *testing.T) {
+		assertOptimizedFSM(t, `
+			FSM: fsm
+	    Actions: actions
+	    Initial: initial
+	    {
+				(a) Ea Na Aa
+				(b):a Eb Nb {Ab1 Ab2}
+				c:b Ec Nc Ac
+				d Ed Nd Ad
+				e:c:d Ee Ne Ae
+	    }
+			`,
+			FSM{
+				Name:         "fsm",
+				ActionsClass: "actions",
+				InitialState: "initial",
+				States: []State{
+					{Name: "c", Transitions: []Transition{
+						{Event: "Ec", NextState: "Nc", Actions: []string{"Ac"}},
+						{Event: "Eb", NextState: "Nb", Actions: []string{"Ab1", "Ab2"}},
+						{Event: "Ea", NextState: "Na", Actions: []string{"Aa"}},
+					}},
+					{Name: "d", Transitions: []Transition{
+						{Event: "Ed", NextState: "Nd", Actions: []string{"Ad"}},
+					}},
+					{Name: "e", Transitions: []Transition{
+						{Event: "Ee", NextState: "Ne", Actions: []string{"Ae"}},
+						{Event: "Ec", NextState: "Nc", Actions: []string{"Ac"}},
+						{Event: "Eb", NextState: "Nb", Actions: []string{"Ab1", "Ab2"}},
+						{Event: "Ea", NextState: "Na", Actions: []string{"Aa"}},
+						{Event: "Ed", NextState: "Nd", Actions: []string{"Ad"}},
+					}},
+				},
+				Events:  []string{"Ea", "Eb", "Ec", "Ed", "Ee"},
+				Actions: []string{"Aa", "Ab1", "Ab2", "Ac", "Ad", "Ae"},
+			},
+		)
+	})
 }
 
 func optimizeFSM(input string) FSM {
