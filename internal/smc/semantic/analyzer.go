@@ -195,11 +195,11 @@ func (a *Analyzer) setTransition(state *State, sub parser.SubTransition) {
 }
 
 func (a *Analyzer) resolveNextState(state *State, nextStateName string) *State {
-	nextState := state
 	if nextStateName != "" {
-		nextState = a.findAndValidateNextState(nextStateName)
+		return markUsed(a.findAndValidateNextState(nextStateName))
 	}
-	return markUsed(nextState)
+	markUsed(state)
+	return nil
 }
 
 func (a *Analyzer) findAndValidateSuperState(name string) *State {
