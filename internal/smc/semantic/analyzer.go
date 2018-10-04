@@ -138,6 +138,7 @@ func (a *Analyzer) setEntryActions(state *State, t parser.Transition) {
 		return
 	}
 	state.EntryActions = t.StateSpec.EntryActions
+	a.addActions(state.EntryActions)
 }
 
 func (a *Analyzer) setExitActions(state *State, t parser.Transition) {
@@ -146,6 +147,7 @@ func (a *Analyzer) setExitActions(state *State, t parser.Transition) {
 		return
 	}
 	state.ExitActions = t.StateSpec.ExitActions
+	a.addActions(state.ExitActions)
 }
 
 func (a *Analyzer) setSuperStates(state *State, t parser.Transition) {
@@ -160,7 +162,25 @@ func (a *Analyzer) setSuperStates(state *State, t parser.Transition) {
 func (a *Analyzer) setTransitions(state *State, t parser.Transition) {
 	for _, sub := range t.SubTransitions {
 		if sub.Event != "" {
+			a.addEvent(sub.Event)
 			a.setTransition(state, sub)
+			a.addActions(sub.Actions)
+		}
+	}
+}
+
+func (a *Analyzer) addEvent(name string) {
+	if !a.eventCache[name] {
+		a.eventCache[name] = true
+		a.semanticFSM.Events = append(a.semanticFSM.Events, name)
+	}
+}
+
+func (a *Analyzer) addActions(actions []string) {
+	for _, action := range actions {
+		if !a.actionCache[action] {
+			a.actionCache[action] = true
+			a.semanticFSM.Actions = append(a.semanticFSM.Actions, action)
 		}
 	}
 }

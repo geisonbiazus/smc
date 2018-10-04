@@ -92,6 +92,8 @@ func TestAnalyzer(t *testing.T) {
 			t.Run("One state without event", func(t *testing.T) {
 				semanticFSM := analizeSemantically("Initial:a{a - - -}")
 				assert.Equal(t, &State{Name: "a", Used: true}, findState(semanticFSM, "a"))
+				assert.Empty(t, semanticFSM.Events)
+				assert.Empty(t, semanticFSM.Actions)
 			})
 
 			t.Run("Self referenced state", func(t *testing.T) {
@@ -101,16 +103,22 @@ func TestAnalyzer(t *testing.T) {
 					{Event: "b", NextState: stateA, Actions: []string{}},
 				}
 				assert.Equal(t, stateA, findState(semanticFSM, "a"))
+				assert.Equal(t, []string{"b"}, semanticFSM.Events)
+				assert.Empty(t, semanticFSM.Actions)
 
 				semanticFSM = analizeSemantically("Initial:a{a b a -}")
 
 				assert.Equal(t, stateA, findState(semanticFSM, "a"))
+				assert.Equal(t, []string{"b"}, semanticFSM.Events)
+				assert.Empty(t, semanticFSM.Actions)
 			})
 
 			t.Run("More than one state", func(t *testing.T) {
 				semanticFSM := analizeSemantically("{a - - - b - - -}")
 				assert.Equal(t, &State{Name: "a"}, findState(semanticFSM, "a"))
 				assert.Equal(t, &State{Name: "b"}, findState(semanticFSM, "b"))
+				assert.Empty(t, semanticFSM.Events)
+				assert.Empty(t, semanticFSM.Actions)
 			})
 
 			t.Run("State with event, next state, and actions", func(t *testing.T) {
@@ -120,6 +128,8 @@ func TestAnalyzer(t *testing.T) {
 					{Event: "b", NextState: stateC, Actions: []string{"d", "e"}},
 				}}
 				assert.Equal(t, stateA, findState(semanticFSM, "a"))
+				assert.Equal(t, []string{"b"}, semanticFSM.Events)
+				assert.Equal(t, []string{"d", "e"}, semanticFSM.Actions)
 			})
 
 			t.Run("Super state", func(t *testing.T) {
@@ -135,6 +145,8 @@ func TestAnalyzer(t *testing.T) {
 				}
 				stateC.SuperStates = append(stateC.SuperStates, stateA)
 				assert.Equal(t, stateC, findState(semanticFSM, "c"))
+				assert.Equal(t, []string{"b"}, semanticFSM.Events)
+				assert.Equal(t, []string{"d"}, semanticFSM.Actions)
 			})
 
 			t.Run("Entry and exit action", func(t *testing.T) {
@@ -145,6 +157,7 @@ func TestAnalyzer(t *testing.T) {
 					ExitActions:  []string{"c"},
 				}
 				assert.Equal(t, stateA, findState(semanticFSM, "a"))
+				assert.Equal(t, []string{"b", "c"}, semanticFSM.Actions)
 			})
 
 			t.Run("Two transitions for the same state", func(t *testing.T) {
@@ -155,15 +168,36 @@ func TestAnalyzer(t *testing.T) {
 					{Event: "d", NextState: stateA, Actions: []string{"e"}},
 				}
 				assert.Equal(t, stateA, findState(semanticFSM, "a"))
+				assert.Equal(t, []string{"b", "d"}, semanticFSM.Events)
+				assert.Equal(t, []string{"c", "e"}, semanticFSM.Actions)
 
 				semanticFSM = analizeSemantically("{a { b - c \n d - e}}")
 				assert.Equal(t, stateA, findState(semanticFSM, "a"))
+				assert.Equal(t, []string{"b", "d"}, semanticFSM.Events)
+				assert.Equal(t, []string{"c", "e"}, semanticFSM.Actions)
 			})
 
 			t.Run("Undefined states are not added", func(t *testing.T) {
 				semanticFSM := analizeSemantically("Initial: a{b c d -}")
 				assert.Len(t, semanticFSM.States, 1)
 				assert.NotNil(t, findState(semanticFSM, "b"))
+				assert.Equal(t, []string{"c"}, semanticFSM.Events)
+				assert.Empty(t, semanticFSM.Actions)
+			})
+
+			t.Run("Duplicate events are not added", func(t *testing.T) {
+				semanticFSM := analizeSemantically("{a b - - c d - - e b - -}")
+				assert.Equal(t, []string{"b", "d"}, semanticFSM.Events)
+			})
+
+			t.Run("Duplicate actions are not added", func(t *testing.T) {
+				semanticFSM := analizeSemantically(`
+					  {
+							s1 >a1 <a1 <a3 e1 - {a1 a1}
+							s2 e2 - a2
+						}`)
+
+				assert.Equal(t, []string{"a1", "a3", "a2"}, semanticFSM.Actions)
 			})
 		})
 
