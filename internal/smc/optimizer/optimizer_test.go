@@ -98,7 +98,7 @@ func TestOptimizer(t *testing.T) {
 	    Actions: actions
 	    Initial: initial
 	    {
-				(a) Ea Na Aa
+				(a) Ea - Aa
 				(b):a Eb Nb {Ab1 Ab2}
 				c:b Ec Nc Ac
 				d Ed Nd Ad
@@ -113,7 +113,7 @@ func TestOptimizer(t *testing.T) {
 					{Name: "c", Transitions: []Transition{
 						{Event: "Ec", NextState: "Nc", Actions: []string{"Ac"}},
 						{Event: "Eb", NextState: "Nb", Actions: []string{"Ab1", "Ab2"}},
-						{Event: "Ea", NextState: "Na", Actions: []string{"Aa"}},
+						{Event: "Ea", NextState: "", Actions: []string{"Aa"}},
 					}},
 					{Name: "d", Transitions: []Transition{
 						{Event: "Ed", NextState: "Nd", Actions: []string{"Ad"}},
@@ -122,7 +122,7 @@ func TestOptimizer(t *testing.T) {
 						{Event: "Ee", NextState: "Ne", Actions: []string{"Ae"}},
 						{Event: "Ec", NextState: "Nc", Actions: []string{"Ac"}},
 						{Event: "Eb", NextState: "Nb", Actions: []string{"Ab1", "Ab2"}},
-						{Event: "Ea", NextState: "Na", Actions: []string{"Aa"}},
+						{Event: "Ea", NextState: "", Actions: []string{"Aa"}},
 						{Event: "Ed", NextState: "Nd", Actions: []string{"Ad"}},
 					}},
 				},

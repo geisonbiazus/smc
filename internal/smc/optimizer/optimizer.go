@@ -49,11 +49,28 @@ func (o *Optimizer) setState(s *semantic.State) {
 
 func (o *Optimizer) setTransitions(state *State, semanticState *semantic.State) {
 	for _, t := range semanticState.Transitions {
-		transition := Transition{Event: t.Event, NextState: t.NextState.Name, Actions: t.Actions}
-		state.Transitions = append(state.Transitions, transition)
+		o.addTransition(state, t)
 	}
 
 	for _, superState := range semanticState.SuperStates {
 		o.setTransitions(state, superState)
 	}
+}
+
+func (o *Optimizer) addTransition(state *State, t semantic.Transition) {
+	transition := Transition{
+		Event:     t.Event,
+		NextState: o.resolveNextState(t),
+		Actions:   t.Actions,
+	}
+
+	state.Transitions = append(state.Transitions, transition)
+}
+
+func (o *Optimizer) resolveNextState(t semantic.Transition) string {
+	if t.NextState != nil {
+		return t.NextState.Name
+	}
+
+	return ""
 }
