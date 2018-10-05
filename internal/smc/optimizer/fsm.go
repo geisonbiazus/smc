@@ -6,12 +6,12 @@ type FSM struct {
 	InitialState string
 	Events       []string
 	Actions      []string
-	States       []State
+	States       []*State
 }
 
 type State struct {
 	Name        string
-	Transitions []Transition
+	Transitions []*Transition
 }
 
 type Transition struct {
