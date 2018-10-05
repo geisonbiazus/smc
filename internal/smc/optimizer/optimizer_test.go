@@ -194,6 +194,35 @@ func TestOptimizer(t *testing.T) {
 		)
 	})
 
+	t.Run("With entry inheritance", func(t *testing.T) {
+		assertOptimizedFSM(t, `
+			FSM: fsm
+	    Actions: actions
+	    Initial: initial
+	    {
+				(S1) >EA1 >EA2 E1 S3 -
+				S2:S1 - - -
+				S3 E3 S2 -
+	    }
+			`,
+			&FSM{
+				Name:         "fsm",
+				ActionsClass: "actions",
+				InitialState: "initial",
+				States: []*State{
+					{Name: "S2", Transitions: []*Transition{
+						{Event: "E1", NextState: "S3", Actions: []string{}},
+					}},
+					{Name: "S3", Transitions: []*Transition{
+						{Event: "E3", NextState: "S2", Actions: []string{"EA1", "EA2"}},
+					}},
+				},
+				Events:  []string{"E1", "E3"},
+				Actions: []string{"EA1", "EA2"},
+			},
+		)
+	})
+
 	t.Run("With exit actions", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
@@ -232,6 +261,35 @@ func TestOptimizer(t *testing.T) {
 				Actions: []string{"EA1", "EA2", "A1", "A2"},
 			},
 		)
+
+		t.Run("With exit inheritance", func(t *testing.T) {
+			assertOptimizedFSM(t, `
+				FSM: fsm
+		    Actions: actions
+		    Initial: initial
+		    {
+					(S1) <EA1 <EA2 E1 S3 -
+					S2:S1 - - -
+					S3 E3 S2 -
+		    }
+				`,
+				&FSM{
+					Name:         "fsm",
+					ActionsClass: "actions",
+					InitialState: "initial",
+					States: []*State{
+						{Name: "S2", Transitions: []*Transition{
+							{Event: "E1", NextState: "S3", Actions: []string{"EA1", "EA2"}},
+						}},
+						{Name: "S3", Transitions: []*Transition{
+							{Event: "E3", NextState: "S2", Actions: []string{}},
+						}},
+					},
+					Events:  []string{"E1", "E3"},
+					Actions: []string{"EA1", "EA2"},
+				},
+			)
+		})
 	})
 }
 
