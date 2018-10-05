@@ -193,6 +193,46 @@ func TestOptimizer(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("With exit actions", func(t *testing.T) {
+		assertOptimizedFSM(t, `
+			FSM: fsm
+	    Actions: actions
+	    Initial: initial
+	    {
+				S1 <EA1 <EA2 {
+					E1 S2 A1
+					E2 S3 -
+				}
+				S2 E2 S1 A2
+				S3 E3 S1 -
+				S4 E4 S2 -
+	    }
+			`,
+			&FSM{
+				Name:         "fsm",
+				ActionsClass: "actions",
+				InitialState: "initial",
+				States: []*State{
+					{Name: "S1", Transitions: []*Transition{
+						{Event: "E1", NextState: "S2", Actions: []string{"A1", "EA1", "EA2"}},
+						{Event: "E2", NextState: "S3", Actions: []string{"EA1", "EA2"}},
+					}},
+					{Name: "S2", Transitions: []*Transition{
+						{Event: "E2", NextState: "S1", Actions: []string{"A2"}},
+					}},
+					{Name: "S3", Transitions: []*Transition{
+						{Event: "E3", NextState: "S1", Actions: []string{}},
+					}},
+					{Name: "S4", Transitions: []*Transition{
+						{Event: "E4", NextState: "S2", Actions: []string{}},
+					}},
+				},
+				Events:  []string{"E1", "E2", "E3", "E4"},
+				Actions: []string{"EA1", "EA2", "A1", "A2"},
+			},
+		)
+	})
 }
 
 func optimizeFSM(input string) *FSM {

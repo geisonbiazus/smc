@@ -20,7 +20,7 @@ func (o *Optimizer) Optimize(fsm *semantic.FSM) *FSM {
 	o.setEventsAndActions()
 	o.setHeaders()
 	o.optimizeStates()
-	o.optmizeEntryActions()
+	o.optimizeEntryActions()
 
 	return o.optimizedFSM
 }
@@ -39,18 +39,19 @@ func (o *Optimizer) setHeaders() {
 func (o *Optimizer) optimizeStates() {
 	for _, s := range o.semanticFSM.States {
 		if !s.Abstract {
-			o.setState(s)
+			o.optmizeState(s)
 		}
 	}
 }
 
-func (o *Optimizer) setState(s *semantic.State) {
+func (o *Optimizer) optmizeState(s *semantic.State) {
 	state := &State{Name: s.Name}
-	o.setTransitions(state, s, make(map[string]bool))
+	o.optimizeTransitions(state, s, make(map[string]bool))
+	o.optimizeExitActions(state, s)
 	o.optimizedFSM.States = append(o.optimizedFSM.States, state)
 }
 
-func (o *Optimizer) setTransitions(
+func (o *Optimizer) optimizeTransitions(
 	state *State, semanticState *semantic.State, definedEvents map[string]bool,
 ) {
 
@@ -59,11 +60,10 @@ func (o *Optimizer) setTransitions(
 			o.addTransition(state, t)
 			definedEvents[t.Event] = true
 		}
-
 	}
 
 	for _, superState := range semanticState.SuperStates {
-		o.setTransitions(state, superState, definedEvents)
+		o.optimizeTransitions(state, superState, definedEvents)
 	}
 }
 
@@ -85,17 +85,27 @@ func (o *Optimizer) resolveNextState(t semantic.Transition) string {
 	return ""
 }
 
-func (o *Optimizer) optmizeEntryActions() {
+func (o *Optimizer) optimizeExitActions(state *State, semanticState *semantic.State) {
+	if len(semanticState.ExitActions) > 0 {
+		for _, t := range state.Transitions {
+			t.Actions = append(t.Actions, semanticState.ExitActions...)
+		}
+	}
+}
+
+func (o *Optimizer) optimizeEntryActions() {
 	for _, semanticState := range o.semanticFSM.States {
 		if len(semanticState.EntryActions) > 0 {
-			for _, optmizedState := range o.optimizedFSM.States {
-				for _, transition := range optmizedState.Transitions {
-					if transition.NextState == semanticState.Name {
-						for _, action := range semanticState.EntryActions {
-							transition.Actions = append(transition.Actions, action)
-						}
-					}
-				}
+			o.optimizeEntryActionsOfState(semanticState)
+		}
+	}
+}
+
+func (o *Optimizer) optimizeEntryActionsOfState(semanticState *semantic.State) {
+	for _, optmizedState := range o.optimizedFSM.States {
+		for _, transition := range optmizedState.Transitions {
+			if transition.NextState == semanticState.Name {
+				transition.Actions = append(transition.Actions, semanticState.EntryActions...)
 			}
 		}
 	}
