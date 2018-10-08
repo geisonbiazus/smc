@@ -205,6 +205,23 @@ func TestAnalyzer(t *testing.T) {
 
 				assert.Equal(t, []string{"a1", "a3", "a2"}, semanticFSM.Actions)
 			})
+
+			t.Run("Duplicate state definitions are merged", func(t *testing.T) {
+				semanticFSM := analizeSemantically(`
+					  {
+							s1 e1 - a1
+							s1 e2 - a2
+						}`)
+
+				assert.Len(t, semanticFSM.States, 1)
+				assert.Equal(t,
+					&State{Name: "s1", Used: true, Transitions: []Transition{
+						{Event: "e1", Actions: []string{"a1"}},
+						{Event: "e2", Actions: []string{"a2"}},
+					}},
+					findState(semanticFSM, "s1"),
+				)
+			})
 		})
 
 		t.Run("Errors", func(t *testing.T) {

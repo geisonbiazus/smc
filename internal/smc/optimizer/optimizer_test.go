@@ -403,6 +403,203 @@ func TestOptimizer(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Acceptance tests", func(t *testing.T) {
+		assertOptimizedFSM(t, `
+			Actions: Turnstile
+			FSM: OneCoinTurnstile
+			Initial: Locked
+			{
+			  Locked	Coin	Unlocked	{alarmOff unlock}
+			  Locked 	Pass	Locked		alarmOn
+			  Unlocked	Coin	Unlocked	thankyou
+			  Unlocked	Pass	Locked		lock
+			}
+			`,
+			&FSM{
+				Name:         "OneCoinTurnstile",
+				ActionsClass: "Turnstile",
+				InitialState: "Locked",
+				States: []*State{
+					{Name: "Locked", Transitions: []*Transition{
+						{Event: "Coin", NextState: "Unlocked", Actions: []string{"alarmOff", "unlock"}},
+						{Event: "Pass", NextState: "Locked", Actions: []string{"alarmOn"}},
+					}},
+					{Name: "Unlocked", Transitions: []*Transition{
+						{Event: "Coin", NextState: "Unlocked", Actions: []string{"thankyou"}},
+						{Event: "Pass", NextState: "Locked", Actions: []string{"lock"}},
+					}},
+				},
+				Events:  []string{"Coin", "Pass"},
+				Actions: []string{"alarmOff", "unlock", "alarmOn", "thankyou", "lock"},
+			},
+		)
+
+		assertOptimizedFSM(t, `
+			Actions: Turnstile
+			FSM: TwoCoinTurnstile
+			Initial: Locked
+			{
+			  Locked {
+			    Pass  Alarming   alarmOn
+			    Coin  FirstCoin  -
+			    Reset Locked     {lock alarmOff}
+			  }
+
+			  Alarming  Reset  Locked  {lock alarmOff}
+
+			  FirstCoin {
+			    Pass  Alarming  -
+			    Coin  Unlocked  unlock
+			    Reset Locked    {lock alarmOff}
+			  }
+
+			  Unlocked {
+			    Pass  Locked  lock
+			    Coin  -       thankyou
+			    Reset Locked  {lock alarmOff}
+			  }
+			}
+			`,
+			&FSM{
+				Name:         "TwoCoinTurnstile",
+				ActionsClass: "Turnstile",
+				InitialState: "Locked",
+				States: []*State{
+					{Name: "Locked", Transitions: []*Transition{
+						{Event: "Pass", NextState: "Alarming", Actions: []string{"alarmOn"}},
+						{Event: "Coin", NextState: "FirstCoin", Actions: []string{}},
+						{Event: "Reset", NextState: "Locked", Actions: []string{"lock", "alarmOff"}},
+					}},
+					{Name: "Alarming", Transitions: []*Transition{
+						{Event: "Reset", NextState: "Locked", Actions: []string{"lock", "alarmOff"}},
+					}},
+					{Name: "FirstCoin", Transitions: []*Transition{
+						{Event: "Pass", NextState: "Alarming", Actions: []string{}},
+						{Event: "Coin", NextState: "Unlocked", Actions: []string{"unlock"}},
+						{Event: "Reset", NextState: "Locked", Actions: []string{"lock", "alarmOff"}},
+					}},
+					{Name: "Unlocked", Transitions: []*Transition{
+						{Event: "Pass", NextState: "Locked", Actions: []string{"lock"}},
+						{Event: "Coin", NextState: "", Actions: []string{"thankyou"}},
+						{Event: "Reset", NextState: "Locked", Actions: []string{"lock", "alarmOff"}},
+					}},
+				},
+				Events:  []string{"Pass", "Coin", "Reset"},
+				Actions: []string{"alarmOn", "lock", "alarmOff", "unlock", "thankyou"},
+			},
+		)
+
+		assertOptimizedFSM(t, `
+			Actions: Turnstile
+			FSM: TwoCoinTurnstile
+			Initial: Locked
+			{
+			  (Base)  Reset  Locked  {alarmOff lock}
+
+			  Locked : Base {
+			    Pass  Alarming  alarmOn
+			    Coin  FirstCoin -
+			  }
+
+			  Alarming : Base  -  -  -
+
+			  FirstCoin : Base {
+			    Pass  Alarming  -
+			    Coin  Unlocked  unlock
+			  }
+
+			  Unlocked : Base {
+			    Pass  Locked  lock
+			    Coin  -       thankyou
+			  }
+			}
+			`,
+			&FSM{
+				Name:         "TwoCoinTurnstile",
+				ActionsClass: "Turnstile",
+				InitialState: "Locked",
+				States: []*State{
+					{Name: "Locked", Transitions: []*Transition{
+						{Event: "Pass", NextState: "Alarming", Actions: []string{"alarmOn"}},
+						{Event: "Coin", NextState: "FirstCoin", Actions: []string{}},
+						{Event: "Reset", NextState: "Locked", Actions: []string{"alarmOff", "lock"}},
+					}},
+					{Name: "Alarming", Transitions: []*Transition{
+						{Event: "Reset", NextState: "Locked", Actions: []string{"alarmOff", "lock"}},
+					}},
+					{Name: "FirstCoin", Transitions: []*Transition{
+						{Event: "Pass", NextState: "Alarming", Actions: []string{}},
+						{Event: "Coin", NextState: "Unlocked", Actions: []string{"unlock"}},
+						{Event: "Reset", NextState: "Locked", Actions: []string{"alarmOff", "lock"}},
+					}},
+					{Name: "Unlocked", Transitions: []*Transition{
+						{Event: "Pass", NextState: "Locked", Actions: []string{"lock"}},
+						{Event: "Coin", NextState: "", Actions: []string{"thankyou"}},
+						{Event: "Reset", NextState: "Locked", Actions: []string{"alarmOff", "lock"}},
+					}},
+				},
+				Events:  []string{"Reset", "Pass", "Coin"},
+				Actions: []string{"alarmOff", "lock", "alarmOn", "unlock", "thankyou"},
+			},
+		)
+
+		assertOptimizedFSM(t, `
+			Actions: Turnstile
+			FSM: TwoCoinTurnstile
+			Initial: Locked
+			{
+			  (Base)  Reset  Locked  lock
+
+			  Locked : Base {
+			    Pass  Alarming   -
+			    Coin  FirstCoin  -
+			  }
+
+			  Alarming : Base  >alarmOn <alarmOff {
+			    - - -
+			  }
+
+			  FirstCoin : Base {
+			    Pass  Alarming  -
+			    Coin  Unlocked  unlock
+			  }
+
+			  Unlocked : Base {
+			    Pass  Locked  lock
+			    Coin  -       thankyou
+			  }
+			}
+			`,
+			&FSM{
+				Name:         "TwoCoinTurnstile",
+				ActionsClass: "Turnstile",
+				InitialState: "Locked",
+				States: []*State{
+					{Name: "Locked", Transitions: []*Transition{
+						{Event: "Pass", NextState: "Alarming", Actions: []string{"alarmOn"}},
+						{Event: "Coin", NextState: "FirstCoin", Actions: []string{}},
+						{Event: "Reset", NextState: "Locked", Actions: []string{"lock"}},
+					}},
+					{Name: "Alarming", Transitions: []*Transition{
+						{Event: "Reset", NextState: "Locked", Actions: []string{"lock", "alarmOff"}},
+					}},
+					{Name: "FirstCoin", Transitions: []*Transition{
+						{Event: "Pass", NextState: "Alarming", Actions: []string{"alarmOn"}},
+						{Event: "Coin", NextState: "Unlocked", Actions: []string{"unlock"}},
+						{Event: "Reset", NextState: "Locked", Actions: []string{"lock"}},
+					}},
+					{Name: "Unlocked", Transitions: []*Transition{
+						{Event: "Pass", NextState: "Locked", Actions: []string{"lock"}},
+						{Event: "Coin", NextState: "", Actions: []string{"thankyou"}},
+						{Event: "Reset", NextState: "Locked", Actions: []string{"lock"}},
+					}},
+				},
+				Events:  []string{"Reset", "Pass", "Coin"},
+				Actions: []string{"lock", "alarmOn", "alarmOff", "unlock", "thankyou"},
+			},
+		)
+	})
 }
 
 func optimizeFSM(input string) *FSM {

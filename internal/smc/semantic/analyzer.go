@@ -43,8 +43,10 @@ func (a *Analyzer) addDefinedStates() {
 func (a *Analyzer) addState(spec parser.StateSpec) {
 	state := a.findOrCreateState(spec.Name)
 	state.Abstract = spec.AbstractState
-	a.stateCache[spec.Name] = state
-	a.semanticFSM.States = append(a.semanticFSM.States, state)
+	if _, ok := a.stateCache[spec.Name]; !ok {
+		a.stateCache[spec.Name] = state
+		a.semanticFSM.States = append(a.semanticFSM.States, state)
+	}
 }
 
 func (a *Analyzer) setAndValidateHeaders() {
