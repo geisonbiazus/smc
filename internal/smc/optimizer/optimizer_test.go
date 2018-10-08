@@ -194,6 +194,34 @@ func TestOptimizer(t *testing.T) {
 		)
 	})
 
+	t.Run("Entry actions are not executed with no transition", func(t *testing.T) {
+		assertOptimizedFSM(t, `
+			FSM: fsm
+	    Actions: actions
+	    Initial: initial
+	    {
+				S1 >EA1 >EA2 E1 S1 -
+				S2 >EA1 >EA2 E1 - -
+	    }
+			`,
+			&FSM{
+				Name:         "fsm",
+				ActionsClass: "actions",
+				InitialState: "initial",
+				States: []*State{
+					{Name: "S1", Transitions: []*Transition{
+						{Event: "E1", NextState: "S1", Actions: []string{}},
+					}},
+					{Name: "S2", Transitions: []*Transition{
+						{Event: "E1", NextState: "", Actions: []string{}},
+					}},
+				},
+				Events:  []string{"E1"},
+				Actions: []string{"EA1", "EA2"},
+			},
+		)
+	})
+
 	t.Run("With entry inheritance", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
@@ -223,7 +251,7 @@ func TestOptimizer(t *testing.T) {
 		)
 	})
 
-	t.Run("With entry inheritance conflicting actions", func(t *testing.T) {
+	t.Run("Inherited duplciated entry actions are ignored", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
 			Actions: actions
@@ -320,7 +348,7 @@ func TestOptimizer(t *testing.T) {
 		)
 	})
 
-	t.Run("With exit inheritance conflicting actions", func(t *testing.T) {
+	t.Run("Inherited duplciated exit actions are ignored", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
 			Actions: actions
@@ -344,6 +372,34 @@ func TestOptimizer(t *testing.T) {
 				},
 				Events:  []string{"E1"},
 				Actions: []string{"EA1", "EA3", "EA2", "A1"},
+			},
+		)
+	})
+
+	t.Run("Exit actions are not executed with no transition", func(t *testing.T) {
+		assertOptimizedFSM(t, `
+			FSM: fsm
+	    Actions: actions
+	    Initial: initial
+	    {
+				S1 <EA1 <EA2 E1 S1 -
+				S2 <EA1 <EA2 E1 - -
+	    }
+			`,
+			&FSM{
+				Name:         "fsm",
+				ActionsClass: "actions",
+				InitialState: "initial",
+				States: []*State{
+					{Name: "S1", Transitions: []*Transition{
+						{Event: "E1", NextState: "S1", Actions: []string{}},
+					}},
+					{Name: "S2", Transitions: []*Transition{
+						{Event: "E1", NextState: "", Actions: []string{}},
+					}},
+				},
+				Events:  []string{"E1"},
+				Actions: []string{"EA1", "EA2"},
 			},
 		)
 	})

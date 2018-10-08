@@ -90,7 +90,9 @@ func (o *Optimizer) optimizeExitActions(state *State, semanticState *semantic.St
 	actions := o.getExitActionsRecursively(semanticState)
 	if len(actions) > 0 {
 		for _, t := range state.Transitions {
-			t.Actions = append(t.Actions, actions...)
+			if t.NextState != "" && t.NextState != state.Name {
+				t.Actions = append(t.Actions, actions...)
+			}
 		}
 	}
 }
@@ -109,7 +111,7 @@ func (o *Optimizer) optimizeEntryActions() {
 		actions := o.getEntryActionsRecursively(semanticState)
 
 		if len(actions) > 0 {
-			o.optimizeEntryActionsOfState(semanticState, actions)
+			o.optimizeEntryActionsOfState(semanticState.Name, actions)
 		}
 	}
 }
@@ -123,11 +125,11 @@ func (o *Optimizer) getEntryActionsRecursively(s *semantic.State) []string {
 	return actions
 }
 
-func (o *Optimizer) optimizeEntryActionsOfState(semanticState *semantic.State, actions []string) {
-	for _, optmizedState := range o.optimizedFSM.States {
-		for _, transition := range optmizedState.Transitions {
-			if transition.NextState == semanticState.Name {
-				transition.Actions = append(transition.Actions, actions...)
+func (o *Optimizer) optimizeEntryActionsOfState(stateName string, actions []string) {
+	for _, s := range o.optimizedFSM.States {
+		for _, t := range s.Transitions {
+			if t.NextState == stateName && s.Name != stateName {
+				t.Actions = append(t.Actions, actions...)
 			}
 		}
 	}
