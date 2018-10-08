@@ -21,6 +21,7 @@ func (o *Optimizer) Optimize(fsm *semantic.FSM) *FSM {
 	o.setHeaders()
 	o.optimizeStates()
 	o.optimizeEntryActions()
+	o.eliminateDuplicatedActions()
 
 	return o.optimizedFSM
 }
@@ -98,7 +99,7 @@ func (o *Optimizer) getExitActionsRecursively(s *semantic.State) []string {
 	actions := []string{}
 	actions = append(actions, s.ExitActions...)
 	for _, super := range s.SuperStates {
-		actions = append(actions, super.ExitActions...)
+		actions = append(actions, o.getExitActionsRecursively(super)...)
 	}
 	return actions
 }
@@ -117,7 +118,7 @@ func (o *Optimizer) getEntryActionsRecursively(s *semantic.State) []string {
 	actions := []string{}
 	actions = append(actions, s.EntryActions...)
 	for _, super := range s.SuperStates {
-		actions = append(actions, super.EntryActions...)
+		actions = append(actions, o.getEntryActionsRecursively(super)...)
 	}
 	return actions
 }
@@ -130,4 +131,25 @@ func (o *Optimizer) optimizeEntryActionsOfState(semanticState *semantic.State, a
 			}
 		}
 	}
+}
+
+func (o *Optimizer) eliminateDuplicatedActions() {
+	for _, s := range o.optimizedFSM.States {
+		for _, t := range s.Transitions {
+			t.Actions = unique(t.Actions)
+		}
+	}
+}
+
+func unique(list []string) []string {
+	result := []string{}
+	cache := map[string]bool{}
+
+	for _, item := range list {
+		if !cache[item] {
+			cache[item] = true
+			result = append(result, item)
+		}
+	}
+	return result
 }
