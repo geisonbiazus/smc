@@ -14,9 +14,9 @@ type Node interface {
 	Accept(v Visitor)
 }
 
-type CompositeNode struct {
-	Nodes []Node
-}
+type CompositeNode []Node
+
+func (n CompositeNode) Accept(v Visitor) {}
 
 type StateInterfaceNode struct {
 	States       []string
@@ -26,7 +26,7 @@ type StateInterfaceNode struct {
 func (n StateInterfaceNode) Accept(v Visitor) {}
 
 type ActionsInterfaceNode struct {
-	Events []string
+	Actions []string
 }
 
 func (n ActionsInterfaceNode) Accept(v Visitor) {}
@@ -61,10 +61,11 @@ type StateClassNode struct {
 func (n StateClassNode) Accept(v Visitor) {}
 
 type StateEventMethodNode struct {
-	StateName     string
-	FSMClassName  string
-	NextEventName string
-	Actions       []string
+	StateName    string
+	FSMClassName string
+	EventName    string
+	NextState    string
+	Actions      []string
 }
 
 func (n StateEventMethodNode) Accept(v Visitor) {}
