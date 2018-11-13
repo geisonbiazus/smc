@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStatePattern(t *testing.T) {
+func TestNodeGenerator(t *testing.T) {
 	t.Run("Single state", func(t *testing.T) {
 		assertGeneratedFSM(t,
 			"FSM: fsm Initial: a { a b a c }",
@@ -214,6 +214,6 @@ func generateFSM(input string) Node {
 	opt := optimizer.New()
 	optimizedFSM := opt.Optimize(semanticFSM)
 
-	gen := NewStatePattern()
+	gen := NewNodeGenerator()
 	return gen.Generate(optimizedFSM)
 }
