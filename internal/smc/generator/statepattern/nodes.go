@@ -16,20 +16,28 @@ type Node interface {
 
 type CompositeNode []Node
 
-func (n CompositeNode) Accept(v Visitor) {}
+func (n CompositeNode) Accept(v Visitor) {
+	for _, node := range n {
+		node.Accept(v)
+	}
+}
 
 type StateInterfaceNode struct {
-	States       []string
+	Events       []string
 	FSMClassName string
 }
 
-func (n StateInterfaceNode) Accept(v Visitor) {}
+func (n StateInterfaceNode) Accept(v Visitor) {
+	v.VisitStateInterfaceNode(n)
+}
 
 type ActionsInterfaceNode struct {
 	Actions []string
 }
 
-func (n ActionsInterfaceNode) Accept(v Visitor) {}
+func (n ActionsInterfaceNode) Accept(v Visitor) {
+	v.VisitActionsInterfaceNode(n)
+}
 
 type FSMClassNode struct {
 	InitialState string
@@ -38,27 +46,35 @@ type FSMClassNode struct {
 	EventMethods []Node
 }
 
-func (n FSMClassNode) Accept(v Visitor) {}
+func (n FSMClassNode) Accept(v Visitor) {
+	v.VisitFSMClassNode(n)
+}
 
 type EventMethodNode struct {
 	ClassName string
 	EventName string
 }
 
-func (n EventMethodNode) Accept(v Visitor) {}
+func (n EventMethodNode) Accept(v Visitor) {
+	v.VisitEventMethodNode(n)
+}
 
 type BaseStateClassNode struct {
 	Events []string
 }
 
-func (n BaseStateClassNode) Accept(v Visitor) {}
+func (n BaseStateClassNode) Accept(v Visitor) {
+	v.VisitBaseStateClassNode(n)
+}
 
 type StateClassNode struct {
 	StateName         string
 	StateEventMethods []Node
 }
 
-func (n StateClassNode) Accept(v Visitor) {}
+func (n StateClassNode) Accept(v Visitor) {
+	v.VisitStateClassNode(n)
+}
 
 type StateEventMethodNode struct {
 	StateName    string
@@ -68,4 +84,6 @@ type StateEventMethodNode struct {
 	Actions      []string
 }
 
-func (n StateEventMethodNode) Accept(v Visitor) {}
+func (n StateEventMethodNode) Accept(v Visitor) {
+	v.VisitStateEventMethodNode(n)
+}

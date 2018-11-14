@@ -18,7 +18,7 @@ func TestNodeGenerator(t *testing.T) {
 			CompositeNode([]Node{
 				StateInterfaceNode{
 					FSMClassName: "fsm",
-					States:       []string{"a"},
+					Events:       []string{"b"},
 				},
 				ActionsInterfaceNode{
 					Actions: []string{"c"},
@@ -81,7 +81,7 @@ func TestNodeGenerator(t *testing.T) {
 			CompositeNode([]Node{
 				StateInterfaceNode{
 					FSMClassName: "TwoCoinTurnstile",
-					States:       []string{"Locked", "Alarming", "FirstCoin", "Unlocked"},
+					Events:       []string{"Reset", "Pass", "Coin"},
 				},
 				ActionsInterfaceNode{
 					Actions: []string{"lock", "alarmOn", "alarmOff", "unlock", "thankyou"},

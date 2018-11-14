@@ -26,16 +26,8 @@ func (g *NodeGenerator) Generate(fsm *optimizer.FSM) Node {
 func (g *NodeGenerator) stateInterfaceNode() Node {
 	return StateInterfaceNode{
 		FSMClassName: g.fsm.Name,
-		States:       g.stateNames(),
+		Events:       g.fsm.Events,
 	}
-}
-
-func (g *NodeGenerator) stateNames() []string {
-	states := []string{}
-	for _, state := range g.fsm.States {
-		states = append(states, state.Name)
-	}
-	return states
 }
 
 func (g *NodeGenerator) fsmClassNode() Node {
