@@ -7,15 +7,23 @@ import (
 )
 
 type Implementer struct {
+	pkg    string
 	result string
 }
 
-func NewImplementer() *Implementer {
-	return &Implementer{}
+func NewImplementer(pkg string) *Implementer {
+	return &Implementer{
+		pkg: pkg,
+	}
 }
 
 func (i *Implementer) Implement(node statepattern.Node) string {
 	i.result = ""
+
+	if i.pkg != "" {
+		i.result += "package " + i.pkg
+	}
+
 	node.Accept(i)
 	return i.result
 }

@@ -17,7 +17,8 @@ func TestImplementer(t *testing.T) {
 	t.Run("Simple FSM", func(t *testing.T) {
 		assertImplementedFSM(t,
 			"FSM: fsm Initial: state { state event state action }",
-			`
+			`package fsm
+
 			type State interface {
 				Event(fsm *Fsm)
 			}
@@ -93,7 +94,8 @@ func TestImplementer(t *testing.T) {
 			    Coin  -       thankyou
 			  }
 			}`,
-			`
+			`package fsm
+
 			type State interface {
 			  Reset(fsm *TwoCoinTurnstile)
 			  Pass(fsm *TwoCoinTurnstile)
@@ -234,12 +236,19 @@ func TestImplementer(t *testing.T) {
 }
 
 func assertImplementedFSM(t *testing.T, input, expected string) {
+	t.Helper()
 	result := implementFSM(input)
-	// fmt.Println(result)
 	assert.Equal(t, removeSpacing(expected), removeSpacing(result))
 }
 
 func implementFSM(input string) string {
+	implementer := NewImplementer("fsm")
+	node := generateFSM(input)
+
+	return implementer.Implement(node)
+}
+
+func generateFSM(input string) statepattern.Node {
 	builder := parser.NewSyntaxBuilder()
 	psr := parser.NewParser(builder)
 	lxr := lexer.NewLexer(psr)
@@ -254,11 +263,7 @@ func implementFSM(input string) string {
 	optimizedFSM := opt.Optimize(semanticFSM)
 
 	gen := statepattern.NewNodeGenerator()
-	node := gen.Generate(optimizedFSM)
-
-	implementer := NewImplementer()
-
-	return implementer.Implement(node)
+	return gen.Generate(optimizedFSM)
 }
 
 var whitespaceRegex = regexp.MustCompile("\\s+")
