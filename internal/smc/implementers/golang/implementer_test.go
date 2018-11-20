@@ -69,7 +69,6 @@ func TestImplementer(t *testing.T) {
 
 	t.Run("Complex FSM", func(t *testing.T) {
 		assertImplementedFSM(t, `
-			Actions: Turnstile
  			FSM: TwoCoinTurnstile
 			Initial: Locked
 			{

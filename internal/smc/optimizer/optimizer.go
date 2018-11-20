@@ -33,7 +33,6 @@ func (o *Optimizer) setEventsAndActions() {
 
 func (o *Optimizer) setHeaders() {
 	o.optimizedFSM.Name = o.semanticFSM.Name
-	o.optimizedFSM.ActionsClass = o.semanticFSM.ActionsClass
 	o.optimizedFSM.InitialState = o.semanticFSM.InitialState.Name
 }
 

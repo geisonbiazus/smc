@@ -2,7 +2,6 @@ package optimizer
 
 type FSM struct {
 	Name         string
-	ActionsClass string
 	InitialState string
 	Events       []string
 	Actions      []string

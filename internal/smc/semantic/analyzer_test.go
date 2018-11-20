@@ -12,8 +12,7 @@ import (
 func TestAnalyzer(t *testing.T) {
 	t.Run("Header analysis", func(t *testing.T) {
 		t.Run("Values", func(t *testing.T) {
-			semanticFSM := analizeSemantically("Actions:a FSM:b Initial:c {}")
-			assert.Equal(t, "a", semanticFSM.ActionsClass)
+			semanticFSM := analizeSemantically("FSM:b Initial:c {}")
 			assert.Equal(t, "b", semanticFSM.Name)
 			assert.Equal(t, "c", semanticFSM.InitialState.Name)
 		})
@@ -40,7 +39,7 @@ func TestAnalyzer(t *testing.T) {
 			)
 
 			assertContainsError(t,
-				analizeSemantically("Actions:a {}"),
+				analizeSemantically("{}"),
 				Error{ErrorNoFSM, "FSM"}, Error{ErrorNoInitial, "Initial"},
 			)
 
@@ -50,22 +49,15 @@ func TestAnalyzer(t *testing.T) {
 			)
 
 			assertNotContainsError(t,
-				analizeSemantically("Actions:a FSM:b Initial:c {}"),
+				analizeSemantically("FSM:b Initial:c {}"),
 				Error{ErrorNoFSM, "FSM"},
 				Error{ErrorNoInitial, "Initial"},
-				Error{ErrorInvalidHeader, "Actions"},
 			)
 
 			assertNotContainsError(t,
-				analizeSemantically("actions:a fsm:b initial:c {}"),
+				analizeSemantically("fsm:b initial:c {}"),
 				Error{ErrorNoFSM, "FSM"},
 				Error{ErrorNoInitial, "Initial"},
-				Error{ErrorInvalidHeader, "actions"},
-			)
-
-			assertContainsError(t,
-				analizeSemantically("Actions:a Actions:b {}"),
-				Error{ErrorDuplicateHeader, "Actions"},
 			)
 
 			assertContainsError(t,
@@ -79,10 +71,9 @@ func TestAnalyzer(t *testing.T) {
 			)
 
 			assertNotContainsError(t,
-				analizeSemantically("Actions:a FSM:b Initial:c {}"),
+				analizeSemantically("FSM:b Initial:c {}"),
 				Error{ErrorDuplicateHeader, "FSM"},
 				Error{ErrorDuplicateHeader, "Initial"},
-				Error{ErrorDuplicateHeader, "Actions"},
 			)
 		})
 	})
@@ -375,7 +366,6 @@ func TestAnalyzer(t *testing.T) {
 
 		t.Run("Acceptance tests", func(t *testing.T) {
 			assertValid(t, `
-					Actions: Turnstile
 					FSM: OneCoinTurnstile
 					Initial: Locked
 					{
@@ -387,7 +377,6 @@ func TestAnalyzer(t *testing.T) {
 				`)
 
 			assertValid(t, `
-					Actions: Turnstile
 					FSM: TwoCoinTurnstile
 					Initial: Locked
 					{
@@ -414,7 +403,6 @@ func TestAnalyzer(t *testing.T) {
 				`)
 
 			assertValid(t, `
-				Actions: Turnstile
 				FSM: TwoCoinTurnstile
 				Initial: Locked
 				{
@@ -440,7 +428,6 @@ func TestAnalyzer(t *testing.T) {
 			`)
 
 			assertValid(t, `
-				Actions: Turnstile
 				FSM: TwoCoinTurnstile
 				Initial: Locked
 				{
@@ -510,6 +497,7 @@ func assertNotContainsWarning(t *testing.T, semanticFSM *FSM, errors ...Error) {
 }
 
 func assertValid(t *testing.T, input string) {
+	t.Helper()
 	fsm := analizeSemantically(input)
 	assert.Empty(t, fsm.Errors)
 	assert.Empty(t, fsm.Warnings)

@@ -14,7 +14,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("Simple FSM", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: a
-	    Actions: b
 	    Initial: c
 	    {
 	      d e f g
@@ -23,7 +22,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "a",
-				ActionsClass: "b",
 				InitialState: "c",
 				States: []*State{
 					{Name: "d", Transitions: []*Transition{
@@ -42,7 +40,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("With abstract superclass", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-	    Actions: actions
 	    Initial: initial
 	    {
 				(a) b c d
@@ -51,7 +48,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "e", Transitions: []*Transition{
@@ -67,7 +63,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("With not abstract superclass", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-	    Actions: actions
 	    Initial: initial
 	    {
 				a b c d
@@ -76,7 +71,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "a", Transitions: []*Transition{
@@ -95,7 +89,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("With deep inheritance", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-	    Actions: actions
 	    Initial: initial
 	    {
 				(a) Ea - Aa
@@ -107,7 +100,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "c", Transitions: []*Transition{
@@ -135,7 +127,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("With transition override", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-	    Actions: actions
 	    Initial: initial
 	    {
 				(a) E - Aa
@@ -145,7 +136,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "c", Transitions: []*Transition{
@@ -161,7 +151,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("With entry actions", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-	    Actions: actions
 	    Initial: initial
 	    {
 				S1 >EA1 >EA2 E1 S2 -
@@ -172,7 +161,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "S1", Transitions: []*Transition{
@@ -197,7 +185,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("Entry actions are not executed with no transition", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-	    Actions: actions
 	    Initial: initial
 	    {
 				S1 >EA1 >EA2 E1 S1 -
@@ -206,7 +193,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "S1", Transitions: []*Transition{
@@ -225,7 +211,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("With entry inheritance", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-	    Actions: actions
 	    Initial: initial
 	    {
 				(S1) >EA1 >EA2 E1 S3 -
@@ -235,7 +220,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "S2", Transitions: []*Transition{
@@ -254,7 +238,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("Inherited duplciated entry actions are ignored", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-			Actions: actions
 			Initial: initial
 			{
 				(S1) >EA1 >EA3 - - -
@@ -265,7 +248,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "S3"},
@@ -282,7 +264,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("With exit actions", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-	    Actions: actions
 	    Initial: initial
 	    {
 				S1 <EA1 <EA2 {
@@ -296,7 +277,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "S1", Transitions: []*Transition{
@@ -322,7 +302,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("With exit inheritance", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-			Actions: actions
 			Initial: initial
 			{
 				(S1) <EA1 <EA2 E1 S3 -
@@ -332,7 +311,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "S2", Transitions: []*Transition{
@@ -351,7 +329,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("Inherited duplciated exit actions are ignored", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-			Actions: actions
 			Initial: initial
 			{
 				(S1) <EA1 <EA3 - - -
@@ -362,7 +339,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "S3", Transitions: []*Transition{
@@ -379,7 +355,6 @@ func TestOptimizer(t *testing.T) {
 	t.Run("Exit actions are not executed with no transition", func(t *testing.T) {
 		assertOptimizedFSM(t, `
 			FSM: fsm
-	    Actions: actions
 	    Initial: initial
 	    {
 				S1 <EA1 <EA2 E1 S1 -
@@ -388,7 +363,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "fsm",
-				ActionsClass: "actions",
 				InitialState: "initial",
 				States: []*State{
 					{Name: "S1", Transitions: []*Transition{
@@ -418,7 +392,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "OneCoinTurnstile",
-				ActionsClass: "Turnstile",
 				InitialState: "Locked",
 				States: []*State{
 					{Name: "Locked", Transitions: []*Transition{
@@ -436,7 +409,6 @@ func TestOptimizer(t *testing.T) {
 		)
 
 		assertOptimizedFSM(t, `
-			Actions: Turnstile
 			FSM: TwoCoinTurnstile
 			Initial: Locked
 			{
@@ -463,7 +435,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "TwoCoinTurnstile",
-				ActionsClass: "Turnstile",
 				InitialState: "Locked",
 				States: []*State{
 					{Name: "Locked", Transitions: []*Transition{
@@ -491,7 +462,6 @@ func TestOptimizer(t *testing.T) {
 		)
 
 		assertOptimizedFSM(t, `
-			Actions: Turnstile
 			FSM: TwoCoinTurnstile
 			Initial: Locked
 			{
@@ -517,7 +487,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "TwoCoinTurnstile",
-				ActionsClass: "Turnstile",
 				InitialState: "Locked",
 				States: []*State{
 					{Name: "Locked", Transitions: []*Transition{
@@ -545,7 +514,6 @@ func TestOptimizer(t *testing.T) {
 		)
 
 		assertOptimizedFSM(t, `
-			Actions: Turnstile
 			FSM: TwoCoinTurnstile
 			Initial: Locked
 			{
@@ -573,7 +541,6 @@ func TestOptimizer(t *testing.T) {
 			`,
 			&FSM{
 				Name:         "TwoCoinTurnstile",
-				ActionsClass: "Turnstile",
 				InitialState: "Locked",
 				States: []*State{
 					{Name: "Locked", Transitions: []*Transition{

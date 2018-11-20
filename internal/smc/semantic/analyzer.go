@@ -59,8 +59,6 @@ func (a *Analyzer) setHeaders() {
 		switch strings.ToLower(header.Name) {
 		case "fsm":
 			a.setName(header.Value)
-		case "actions":
-			a.setActionsClass(header.Value)
 		case "initial":
 			a.setInitialState(header.Value)
 		default:
@@ -72,12 +70,6 @@ func (a *Analyzer) setHeaders() {
 func (a *Analyzer) setName(value string) {
 	if !a.isDuplicate(a.semanticFSM.Name, ErrorDuplicateHeader, "FSM") {
 		a.semanticFSM.Name = value
-	}
-}
-
-func (a *Analyzer) setActionsClass(value string) {
-	if !a.isDuplicate(a.semanticFSM.ActionsClass, ErrorDuplicateHeader, "Actions") {
-		a.semanticFSM.ActionsClass = value
 	}
 }
 

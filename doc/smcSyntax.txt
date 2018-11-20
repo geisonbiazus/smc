@@ -1,5 +1,4 @@
 //OneCoin
-Actions: Turnstile
 FSM: OneCoinTurnstile
 Initial: Locked
 {
@@ -10,7 +9,6 @@ Initial: Locked
 }
 
 //TwoCoin1
-Actions: Turnstile
 FSM: TwoCoinTurnstile
 Initial: Locked
 {
@@ -36,7 +34,6 @@ Initial: Locked
 }
 
 //TwoCoin2
-Actions: Turnstile
 FSM: TwoCoinTurnstile
 Initial: Locked
 {
@@ -61,7 +58,6 @@ Initial: Locked
 }
 
 //TwoCoin3
-Actions: Turnstile
 FSM: TwoCoinTurnstile
 Initial: Locked
 {

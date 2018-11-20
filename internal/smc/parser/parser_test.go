@@ -214,8 +214,7 @@ func TestParser(t *testing.T) {
 
 	t.Run("Acceptance tests", func(t *testing.T) {
 		assertParserResult(t,
-			`Actions: Turnstile
-			FSM: OneCoinTurnstile
+			`FSM: OneCoinTurnstile
 			Initial: Locked
 			{
 			  Locked	Coin	Unlocked	{alarmOff unlock}
@@ -225,7 +224,6 @@ func TestParser(t *testing.T) {
 			}`,
 			FSMSyntax{
 				Headers: []Header{
-					{Name: "Actions", Value: "Turnstile"},
 					{Name: "FSM", Value: "OneCoinTurnstile"},
 					{Name: "Initial", Value: "Locked"},
 				},
@@ -239,8 +237,7 @@ func TestParser(t *testing.T) {
 			})
 
 		assertParserResult(t,
-			`Actions: Turnstile
-			FSM: TwoCoinTurnstile
+			`FSM: TwoCoinTurnstile
 			Initial: Locked
 			{
 			  Locked {
@@ -265,7 +262,6 @@ func TestParser(t *testing.T) {
 			}`,
 			FSMSyntax{
 				Headers: []Header{
-					{Name: "Actions", Value: "Turnstile"},
 					{Name: "FSM", Value: "TwoCoinTurnstile"},
 					{Name: "Initial", Value: "Locked"},
 				},
@@ -293,8 +289,7 @@ func TestParser(t *testing.T) {
 			})
 
 		assertParserResult(t,
-			`Actions: Turnstile
-			FSM: TwoCoinTurnstile
+			`FSM: TwoCoinTurnstile
 			Initial: Locked
 			{
 			  (Base)  Reset  Locked  {alarmOff lock}
@@ -318,7 +313,6 @@ func TestParser(t *testing.T) {
 			}`,
 			FSMSyntax{
 				Headers: []Header{
-					{Name: "Actions", Value: "Turnstile"},
 					{Name: "FSM", Value: "TwoCoinTurnstile"},
 					{Name: "Initial", Value: "Locked"},
 				},
@@ -346,8 +340,7 @@ func TestParser(t *testing.T) {
 			})
 
 		assertParserResult(t,
-			`Actions: Turnstile
-			FSM: TwoCoinTurnstile
+			`FSM: TwoCoinTurnstile
 			Initial: Locked
 			{
 			  (Base)  Reset  Locked  lock
@@ -373,7 +366,6 @@ func TestParser(t *testing.T) {
 			}`,
 			FSMSyntax{
 				Headers: []Header{
-					{Name: "Actions", Value: "Turnstile"},
 					{Name: "FSM", Value: "TwoCoinTurnstile"},
 					{Name: "Initial", Value: "Locked"},
 				},

@@ -4,7 +4,6 @@ type FSM struct {
 	Errors       []Error
 	Warnings     []Error
 	Name         string
-	ActionsClass string
 	InitialState *State
 	States       []*State
 	Events       []string
