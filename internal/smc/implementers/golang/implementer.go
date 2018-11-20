@@ -53,7 +53,7 @@ func (i *Implementer) VisitFSMClassNode(node statepattern.FSMClassNode) {
 	i.result += "}\n"
 	i.result += "\n"
 	i.result += "func New" + className + "(actions Actions) *" + className + " {\n"
-	i.result += "  return &Fsm{\n"
+	i.result += "  return &" + className + "{\n"
 	i.result += "    Actions: actions,\n"
 	i.result += "    State:   NewState" + title(node.InitialState) + "(),\n"
 	i.result += "  }\n"
@@ -79,7 +79,7 @@ func (i *Implementer) VisitBaseStateClassNode(node statepattern.BaseStateClassNo
 
 	for _, event := range node.Events {
 		i.result += "\n"
-		i.result += "func (b BaseState) " + title(event) + "(fsm *Fsm) {\n"
+		i.result += "func (b BaseState) " + title(event) + "(fsm *" + title(node.FSMClassName) + ") {\n"
 		i.result += "  fsm.Actions.UnhandledTransition(b.StateName, \"" + event + "\")\n"
 		i.result += "}\n"
 	}
@@ -91,8 +91,8 @@ func (i *Implementer) VisitStateClassNode(node statepattern.StateClassNode) {
 	i.result += "  BaseState\n"
 	i.result += "}\n"
 	i.result += "\n"
-	i.result += "func NewState" + title(node.StateName) + "() StateState {\n"
-	i.result += "  return StateState{BaseState{StateName: \"" + node.StateName + "\"}}\n"
+	i.result += "func NewState" + title(node.StateName) + "() State" + title(node.StateName) + " {\n"
+	i.result += "  return State" + title(node.StateName) + "{BaseState{StateName: \"" + node.StateName + "\"}}\n"
 	i.result += "}\n"
 
 	for _, method := range node.StateEventMethods {
@@ -101,8 +101,11 @@ func (i *Implementer) VisitStateClassNode(node statepattern.StateClassNode) {
 }
 func (i *Implementer) VisitStateEventMethodNode(node statepattern.StateEventMethodNode) {
 	i.result += "\n"
-	i.result += "func (s State" + title(node.StateName) + ") Event(fsm *" + title(node.FSMClassName) + ") {\n"
-	i.result += "  fsm.State = NewState" + title(node.NextState) + "()\n"
+	i.result += "func (s State" + title(node.StateName) + ") " + title(node.EventName) + "(fsm *" + title(node.FSMClassName) + ") {\n"
+
+	if node.NextState != "" {
+		i.result += "  fsm.State = NewState" + title(node.NextState) + "()\n"
+	}
 
 	for _, action := range node.Actions {
 		i.result += "  fsm.Actions." + title(action) + "()\n"

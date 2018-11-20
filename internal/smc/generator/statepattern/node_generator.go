@@ -55,7 +55,8 @@ func (g *NodeGenerator) actionsInterfaceNode() Node {
 
 func (g *NodeGenerator) baseStateClassNode() Node {
 	return BaseStateClassNode{
-		Events: g.fsm.Events,
+		FSMClassName: g.fsm.Name,
+		Events:       g.fsm.Events,
 	}
 }
 

@@ -31,7 +31,8 @@ func TestNodeGenerator(t *testing.T) {
 					},
 				},
 				BaseStateClassNode{
-					Events: []string{"b"},
+					FSMClassName: "fsm",
+					Events:       []string{"b"},
 				},
 				CompositeNode([]Node{
 					StateClassNode{
@@ -96,7 +97,8 @@ func TestNodeGenerator(t *testing.T) {
 					},
 				},
 				BaseStateClassNode{
-					Events: []string{"Reset", "Pass", "Coin"},
+					FSMClassName: "TwoCoinTurnstile",
+					Events:       []string{"Reset", "Pass", "Coin"},
 				},
 				CompositeNode([]Node{
 					StateClassNode{

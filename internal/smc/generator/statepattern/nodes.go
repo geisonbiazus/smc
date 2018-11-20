@@ -60,7 +60,8 @@ func (n EventMethodNode) Accept(v Visitor) {
 }
 
 type BaseStateClassNode struct {
-	Events []string
+	FSMClassName string
+	Events       []string
 }
 
 func (n BaseStateClassNode) Accept(v Visitor) {
