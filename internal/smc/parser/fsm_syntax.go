@@ -1,5 +1,7 @@
 package parser
 
+import "fmt"
+
 type FSMSyntax struct {
 	Headers []Header
 	Logic   []Transition
@@ -36,6 +38,13 @@ type SyntaxError struct {
 	Msg        string
 	LineNumber int
 	Position   int
+}
+
+func (e SyntaxError) String() string {
+	return fmt.Sprintf(
+		"Type: %s - Line: %d Pos %d - Message: %s",
+		e.Type, e.LineNumber, e.Position, e.Msg,
+	)
 }
 
 type ErrorType string
