@@ -1,5 +1,7 @@
 package semantic
 
+import "fmt"
+
 type FSM struct {
 	Errors       []Error
 	Warnings     []Error
@@ -29,6 +31,10 @@ type Transition struct {
 type Error struct {
 	Type    ErrorType
 	Element string
+}
+
+func (e Error) String() string {
+	return fmt.Sprintf("Type: %s - Element: %s", e.Type, e.Element)
 }
 
 type ErrorType string
