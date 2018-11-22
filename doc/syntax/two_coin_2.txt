@@ -1,0 +1,22 @@
+FSM: TwoCoinTurnstile
+Initial: Locked
+{
+  (Base)  Reset  Locked  {alarmOff lock}
+
+  Locked : Base {
+    Pass  Alarming  alarmOn
+    Coin  FirstCoin -
+  }
+
+  Alarming : Base  -  -  -
+
+  FirstCoin : Base {
+    Pass  Alarming  -
+    Coin  Unlocked  unlock
+  }
+
+  Unlocked : Base {
+    Pass  Locked  lock
+    Coin  -       thankyou
+  }
+}

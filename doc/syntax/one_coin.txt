@@ -1,0 +1,8 @@
+FSM: OneCoinTurnstile
+Initial: Locked
+{
+  Locked	Coin	Unlocked	{alarmOff unlock}
+  Locked 	Pass	Locked		alarmOn
+  Unlocked	Coin	Unlocked	thankyou
+  Unlocked	Pass	Locked		lock
+}

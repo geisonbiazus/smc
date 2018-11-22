@@ -1,0 +1,16 @@
+FSM : Login
+Initial : Unauthenticated
+{
+  Unauthenticated {
+    Submit LoggingIn SubmitCredentials
+  }
+
+  LoggingIn {
+    Error Unauthenticated ShowErrorMessage
+    Success Authenticated RedirectToHome
+  }
+
+  Authenticated {
+    LogOut Unauthenticated RedirectToLogin
+  }
+}
