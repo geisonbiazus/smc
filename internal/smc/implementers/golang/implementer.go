@@ -21,7 +21,7 @@ func (i *Implementer) Implement(node statepattern.Node) string {
 	i.result = ""
 
 	if i.pkg != "" {
-		i.result += "package " + i.pkg
+		i.result += "package " + i.pkg + "\n"
 	}
 
 	node.Accept(i)
