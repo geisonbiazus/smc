@@ -11,39 +11,46 @@ import (
 
 func TestCompiler(t *testing.T) {
 	t.Run("Collect syntax errors", func(t *testing.T) {
-		assertContainsError(t, compileFSM("& a:b {}", &bytes.Buffer{}),
+		compiler, err := compileFSM("& a:b {}", &bytes.Buffer{})
+		assertContainsError(t, compiler,
 			parser.SyntaxError{
 				Type: parser.ErrorSyntax, LineNumber: 1, Position: 1,
 			},
 		)
+		assert.Equal(t, CompileError, err)
 	})
 
 	t.Run("Collect parse errors", func(t *testing.T) {
-		assertContainsError(t, compileFSM("a:b:c {}", &bytes.Buffer{}),
+		compiler, err := compileFSM("a:b:c {}", &bytes.Buffer{})
+		assertContainsError(t, compiler,
 			parser.SyntaxError{
 				Type: parser.ErrorParse, LineNumber: 1, Position: 4, Msg: "HEADER|COLON",
 			},
 		)
+		assert.Equal(t, CompileError, err)
 	})
 
 	t.Run("Collect semantic errors", func(t *testing.T) {
-		assertContainsError(t, compileFSM("a:b {}", &bytes.Buffer{}),
+		compiler, err := compileFSM("a:b {}", &bytes.Buffer{})
+		assertContainsError(t, compiler,
 			semantic.Error{Type: semantic.ErrorNoFSM, Element: "FSM"},
 		)
+		assert.Equal(t, CompileError, err)
 	})
 
 	t.Run("Write the compiled output", func(t *testing.T) {
 		buffer := &bytes.Buffer{}
-		compileFSM("FSM: fsm Initial: state { state event state action }", buffer)
+		_, err := compileFSM("FSM: fsm Initial: state { state event state action }", buffer)
 
 		assert.Equal(t, compiledFSM, buffer.String())
+		assert.Nil(t, err)
 	})
 }
 
-func compileFSM(input string, output *bytes.Buffer) *Compiler {
+func compileFSM(input string, output *bytes.Buffer) (*Compiler, error) {
 	compiler := NewCompiler(bytes.NewBufferString(input), output)
-	compiler.Compile()
-	return compiler
+	err := compiler.Compile()
+	return compiler, err
 }
 
 func assertContainsError(t *testing.T, compiler *Compiler, err Error) {

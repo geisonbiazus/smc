@@ -1,6 +1,7 @@
 package smc
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -17,9 +18,14 @@ type Error interface {
 }
 
 type Compiler struct {
-	input  io.Reader
-	output io.Writer
-	Errors []Error
+	input          io.Reader
+	output         io.Writer
+	Errors         []Error
+	parsedFSM      parser.FSMSyntax
+	semanticFSM    *semantic.FSM
+	optimizedFSM   *optimizer.FSM
+	node           statepattern.Node
+	implementedFSM string
 }
 
 func NewCompiler(input io.Reader, output io.Writer) *Compiler {
@@ -29,63 +35,69 @@ func NewCompiler(input io.Reader, output io.Writer) *Compiler {
 	}
 }
 
-func (c *Compiler) Compile() {
-	parsedFSM := c.parseFSM()
-	c.collectParseErrors(parsedFSM)
-
-	if len(parsedFSM.Errors) > 0 {
-		return
+func (c *Compiler) Compile() error {
+	if !c.parseFSM() {
+		return CompileError
 	}
 
-	semanticFSM := c.analyzeFSM(parsedFSM)
-	c.collectSemanticErrors(semanticFSM)
-
-	if len(semanticFSM.Errors) > 0 {
-		return
+	if !c.analyzeFSM() {
+		return CompileError
 	}
 
-	optimizedFSM := c.optimizeFSM(semanticFSM)
-	node := c.generateFSM(optimizedFSM)
-	c.implementFSM(node)
+	c.optimizeFSM()
+	c.generateFSM()
+	c.implementFSM()
+	c.writeImplementation()
+	return nil
 }
 
-func (c *Compiler) parseFSM() parser.FSMSyntax {
+func (c *Compiler) parseFSM() bool {
 	builder := parser.NewSyntaxBuilder()
 	psr := parser.NewParser(builder)
 	lxr := lexer.NewLexer(psr)
 	lxr.Lex(c.input)
-	return builder.FSM()
+
+	c.parsedFSM = builder.FSM()
+	c.collectParseErrors()
+	return len(c.Errors) == 0
 }
 
-func (c *Compiler) analyzeFSM(parsedFSM parser.FSMSyntax) *semantic.FSM {
+func (c *Compiler) collectParseErrors() {
+	for _, err := range c.parsedFSM.Errors {
+		c.Errors = append(c.Errors, err)
+	}
+}
+
+func (c *Compiler) analyzeFSM() bool {
 	analyzer := semantic.NewAnalyzer()
-	return analyzer.Analyze(parsedFSM)
+	c.semanticFSM = analyzer.Analyze(c.parsedFSM)
+	c.collectSemanticErrors()
+	return len(c.Errors) == 0
 }
 
-func (c *Compiler) collectParseErrors(parsedFSM parser.FSMSyntax) {
-	for _, err := range parsedFSM.Errors {
+func (c *Compiler) collectSemanticErrors() {
+	for _, err := range c.semanticFSM.Errors {
 		c.Errors = append(c.Errors, err)
 	}
 }
 
-func (c *Compiler) collectSemanticErrors(semanticFSM *semantic.FSM) {
-	for _, err := range semanticFSM.Errors {
-		c.Errors = append(c.Errors, err)
-	}
-}
-
-func (c *Compiler) optimizeFSM(semanticFSM *semantic.FSM) *optimizer.FSM {
+func (c *Compiler) optimizeFSM() {
 	opt := optimizer.New()
-	return opt.Optimize(semanticFSM)
+	c.optimizedFSM = opt.Optimize(c.semanticFSM)
 }
 
-func (c *Compiler) generateFSM(optimizedFSM *optimizer.FSM) statepattern.Node {
+func (c *Compiler) generateFSM() {
 	generator := statepattern.NewNodeGenerator()
-	return generator.Generate(optimizedFSM)
+	c.node = generator.Generate(c.optimizedFSM)
 }
 
-func (c *Compiler) implementFSM(node statepattern.Node) {
+func (c *Compiler) implementFSM() {
 	impl := golang.NewImplementer("fsm")
-	result := impl.Implement(node)
-	fmt.Fprint(c.output, result)
+	c.implementedFSM = impl.Implement(c.node)
 }
+
+func (c *Compiler) writeImplementation() {
+	fmt.Fprint(c.output, c.implementedFSM)
+}
+
+var CompileError = errors.New("Compile error")
